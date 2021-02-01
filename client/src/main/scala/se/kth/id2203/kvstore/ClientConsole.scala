@@ -28,8 +28,9 @@ import com.typesafe.scalalogging.StrictLogging;
 import org.apache.log4j.Layout
 import util.log4j.ColoredPatternLayout;
 import fastparse._, NoWhitespace._
-import concurrent.Await
+import concurrent.{Await, Future => ScalaFuture}
 import concurrent.duration._
+import io.netty.util.concurrent.Future
 
 object ClientConsole {
   def lowercase[_: P] = P(CharIn("a-z"))
@@ -45,21 +46,27 @@ class ClientConsole(val service: ClientService) extends CommandConsole with Pars
   override def layout: Layout = colouredLayout;
   override def onInterrupt(): Unit = exit();
 
-  val opParser = new ParsingObject[String] {
-    override def parseOperation[_: P]: P[String] = P("op" ~ " " ~ simpleStr.!);
-  }
-
-  val opCommand = parsed(opParser, usage = "op <key>", descr = "Executes an op for <key>.") { key =>
-    println(s"Op with $key");
-
-    val fr = service.op(key);
+  private def onSent(fr: ScalaFuture[OpResponse]): Unit = {
     out.println("Operation sent! Awaiting response...");
     try {
       val r = Await.result(fr, 5.seconds);
       out.println("Operation complete! Response was: " + r.status);
     } catch {
-      case e: Throwable => logger.error("Error during op.", e);
+      case e: Throwable => logger.error("Error during operation.", e);
     }
-  };
+  }
 
+  val putParser = new ParsingObject[(String, String)] {
+    override def parseOperation[_: P]: P[(String, String)] = P(("PUT" | "put") ~ " " ~ simpleStr.! ~ " " ~ simpleStr.!);
+  }
+
+  val putCommand =
+    parsed(putParser, usage = "PUT <key> <value>", descr = "Executes a PUT for <key> with value <value>.") {
+      case (key, value) =>
+        println(s"PUT with key $key and value $value");
+
+        val fr = service.put(key, value);
+        out.print("PUT sent! Awaiting response...");
+        onSent(fr);
+    }
 }

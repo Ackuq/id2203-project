@@ -27,19 +27,32 @@ import se.kth.id2203.networking._;
 import se.kth.id2203.overlay.Routing;
 import se.sics.kompics.sl._;
 import se.sics.kompics.network.Network;
+import scala.collection.mutable.HashMap
 
 class KVService extends ComponentDefinition {
+  type Key = String;
+  type Value = String;
 
   //******* Ports ******
-  val net = requires[Network];
-  val route = requires(Routing);
+  private val net = requires[Network];
+  private val route = requires(Routing);
   //******* Fields ******
-  val self = cfg.getValue[NetAddress]("id2203.project.address");
+  private val self = cfg.getValue[NetAddress]("id2203.project.address");
+  private val store = HashMap[Key, Value]()
   //******* Handlers ******
   net uponEvent {
     case NetMessage(header, op: Op) => {
-      log.info("Got operation {}! Now implement me please :)", op);
-      trigger(NetMessage(self, header.src, op.response(OpCode.NotImplemented)) -> net);
+      op.method match {
+        // Store value and respond
+        case PUT =>
+          trigger(
+            NetMessage(self,
+                       header.src,
+                       op.response(store.put(op.key, op.value.getOrElse("")).getOrElse(""), OpCode.Ok)) -> net
+          )
+        case _ =>
+          trigger(NetMessage(self, header.src, op.response(OpCode.NotImplemented)) -> net);
+      }
     }
   }
 }
