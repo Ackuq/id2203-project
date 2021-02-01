@@ -38,6 +38,7 @@ nb-configuration.xml
 .bloop/
 .metals/
 *.code-workspace
+metals.sbt
 
 # VSCode
 .vscode/
