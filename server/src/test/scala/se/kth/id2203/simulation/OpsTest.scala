@@ -35,6 +35,7 @@ import se.sics.kompics.simulator.run.LauncherComp
 import se.sics.kompics.simulator.result.SimulationResultSingleton;
 import se.sics.kompics.simulator.network.impl.NetworkModels
 import scala.concurrent.duration._
+import se.kth.id2203.kvstore.OpCode.NotFound
 
 class OpsTest extends FlatSpec with Matchers {
 
@@ -57,7 +58,7 @@ class OpsTest extends FlatSpec with Matchers {
   //    }
   //  }
 
-  "Simple Operations" should "not be implemented" in { // well of course eventually they should be implemented^^
+  "Simple Operations" should "be implemented" in {
     val seed = 123L;
     JSimulationScenario.setSeed(seed);
     val simpleBootScenario = SimpleScenario.scenario(3);
@@ -65,9 +66,12 @@ class OpsTest extends FlatSpec with Matchers {
     SimulationResult += ("messages" -> nMessages);
     simpleBootScenario.simulate(classOf[LauncherComp]);
     for (i <- 0 to nMessages) {
-      // TODO: Change proper test
-      SimulationResult.get[String](s"test$i") should be(None);
-      // of course the correct response should be Success not NotImplemented, but like this the test passes
+      // PUTs
+      SimulationResult.get[String](s"put$i.put") should be(Some(s"value$i"));
+    }
+    for (i <- 0 to nMessages) {
+      // GETs, sometimes the PUT's might not have been processed yet, so accept not found
+      SimulationResult.get[String](s"put$i.get") should (be(Some(s"value$i")) or be(Some("NotFound")));
     }
   }
 

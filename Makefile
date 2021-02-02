@@ -1,5 +1,7 @@
 DIR=$(shell pwd)
 
+all: compile assemble
+
 compile:
 	sbt compile
 

@@ -32,7 +32,8 @@ trait Operation extends KompicsEvent {
 }
 
 trait Method
-case object PUT extends Method
+case object PUT extends Method;
+case object GET extends Method;
 
 @SerialVersionUID(-374812437823538710L)
 case class Op(method: Method, key: String, value: Option[String] = None, id: UUID = UUID.randomUUID())
@@ -45,6 +46,7 @@ case class Op(method: Method, key: String, value: Option[String] = None, id: UUI
 object OpCode {
   sealed trait OpCode;
   case object Ok extends OpCode;
+  case object BadRequest extends OpCode;
   case object NotFound extends OpCode;
   case object NotImplemented extends OpCode;
 }

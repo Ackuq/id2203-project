@@ -45,11 +45,24 @@ class KVService extends ComponentDefinition {
       op.method match {
         // Store value and respond
         case PUT =>
-          trigger(
-            NetMessage(self,
-                       header.src,
-                       op.response(store.put(op.key, op.value.getOrElse("")).getOrElse(""), OpCode.Ok)) -> net
-          )
+          op.value match {
+            case Some(value) =>
+              store.put(op.key, value);
+              trigger(
+                NetMessage(self, header.src, op.response(value, OpCode.Ok)) -> net
+              )
+            case None =>
+              trigger(
+                NetMessage(self, header.src, op.response(OpCode.BadRequest)) -> net
+              )
+          }
+        case GET =>
+          store.get(op.key) match {
+            case Some(value) =>
+              trigger(NetMessage(self, header.src, op.response(value, OpCode.Ok)) -> net)
+            case None =>
+              trigger(NetMessage(self, header.src, op.response(OpCode.NotFound)) -> net)
+          }
         case _ =>
           trigger(NetMessage(self, header.src, op.response(OpCode.NotImplemented)) -> net);
       }
