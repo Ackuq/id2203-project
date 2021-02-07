@@ -42,8 +42,8 @@ class LookupTable extends NodeAssignment with Serializable {
     return partitions(partition);
   }
 
-  def getNodes(): Set[NetAddress] = partitions.foldLeft(Set.empty[NetAddress]) {
-    case (acc, kv) => acc ++ kv._2
+  def getNodes(): Set[NetAddress] = partitions.foldLeft(Set.empty[NetAddress]) { case (acc, kv) =>
+    acc ++ kv._2
   }
 
   override def toString(): String = {
@@ -58,14 +58,13 @@ class LookupTable extends NodeAssignment with Serializable {
 
 object LookupTable {
 
-  /**
-    * TODO: Decide on how quorums should work.
+  /** TODO: Decide on how quorums should work.
     * @param nodes - Nodes in cluster.
     * @param replicationDegree - How much we should replicate data.
     */
   def generate(nodes: Set[NetAddress], replicationDegree: Int): LookupTable = {
     val lut = new LookupTable();
-    val partitionSize = replicationDegree + 1;
+    /*     val partitionSize = replicationDegree + 1;
     lut.partitions ++= (0 -> nodes);
     val partition = 0
     /* Divide into partitions and add the partitions to the table */
@@ -73,7 +72,8 @@ object LookupTable {
       .sliding(partitionSize, partitionSize)
       .foreach(group => {
         lut.partitions ++= (partition -> group);
-      })
+      }) */
+    lut.partitions ++= (0 -> nodes);
     lut
   }
 }

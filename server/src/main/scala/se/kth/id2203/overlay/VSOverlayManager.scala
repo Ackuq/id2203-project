@@ -30,8 +30,7 @@ import se.sics.kompics.network.Network;
 import se.sics.kompics.timer.Timer;
 import util.Random;
 
-/**
-  * The V(ery)S(imple)OverlayManager.
+/** The V(ery)S(imple)OverlayManager.
   * <p>
   * Keeps all nodes in a single partition in one replication group.
   * <p>
@@ -44,13 +43,13 @@ class VSOverlayManager extends ComponentDefinition {
 
   //******* Ports ******
   val route = provides(Routing);
-  val boot = requires(Bootstrapping);
-  val net = requires[Network];
+  val boot  = requires(Bootstrapping);
+  val net   = requires[Network];
   val timer = requires[Timer];
   //******* Fields ******
   val self = cfg.getValue[NetAddress]("id2203.project.address");
   /* How many replications we should manage */
-  val replicationDegree = cfg.getValue[Int]("id2203.project.replicationDegree");
+  val replicationDegree                = cfg.getValue[Int]("id2203.project.replicationDegree");
   private var lut: Option[LookupTable] = None;
   //******* Handlers ******
   boot uponEvent {
@@ -70,7 +69,7 @@ class VSOverlayManager extends ComponentDefinition {
     case NetMessage(header, RouteMsg(key, msg)) => {
       val nodes = lut.get.lookup(key);
       assert(!nodes.isEmpty);
-      val i = Random.nextInt(nodes.size);
+      val i      = Random.nextInt(nodes.size);
       val target = nodes.drop(i).head;
       log.info(s"Forwarding message for key $key to $target");
       trigger(NetMessage(header.src, target, msg) -> net);
@@ -91,7 +90,7 @@ class VSOverlayManager extends ComponentDefinition {
     case RouteMsg(key, msg) => {
       val nodes = lut.get.lookup(key);
       assert(!nodes.isEmpty);
-      val i = Random.nextInt(nodes.size);
+      val i      = Random.nextInt(nodes.size);
       val target = nodes.drop(i).head;
       log.info(s"Routing message for key $key to $target");
       trigger(NetMessage(self, target, msg) -> net);

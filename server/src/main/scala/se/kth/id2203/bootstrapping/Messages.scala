@@ -26,5 +26,5 @@ package se.kth.id2203.bootstrapping;
 import se.sics.kompics.KompicsEvent;
 
 case class Boot(assignment: NodeAssignment) extends KompicsEvent;
-case object CheckIn extends KompicsEvent;
-case object Ready extends KompicsEvent;
+case object CheckIn                         extends KompicsEvent;
+case object Ready                           extends KompicsEvent;

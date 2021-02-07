@@ -34,32 +34,32 @@ import se.sics.kompics.timer._;
 import collection.mutable;
 import concurrent.{Future, Promise};
 
-case class ConnectTimeout(spt: ScheduleTimeout) extends Timeout(spt);
+case class ConnectTimeout(spt: ScheduleTimeout)                                   extends Timeout(spt);
 case class OpWithPromise(op: Operation, promise: Promise[OpResponse] = Promise()) extends KompicsEvent;
 
 class ClientService extends ComponentDefinition {
 
   //******* Ports ******
   val timer = requires[Timer];
-  val net = requires[Network];
+  val net   = requires[Network];
   //******* Fields ******
-  val self = cfg.getValue[NetAddress]("id2203.project.address");
-  val server = cfg.getValue[NetAddress]("id2203.project.bootstrap-address");
+  val self                                  = cfg.getValue[NetAddress]("id2203.project.address");
+  val server                                = cfg.getValue[NetAddress]("id2203.project.bootstrap-address");
   private var connected: Option[ConnectAck] = None;
-  private var timeoutId: Option[UUID] = None;
-  private val pending = mutable.SortedMap.empty[UUID, Promise[OpResponse]];
+  private var timeoutId: Option[UUID]       = None;
+  private val pending                       = mutable.SortedMap.empty[UUID, Promise[OpResponse]];
 
   //******* Handlers ******
   ctrl uponEvent {
     case _: Start => {
       log.debug(s"Starting client on $self. Waiting to connect...");
       val timeout: Long = (cfg.getValue[Long]("id2203.project.keepAlivePeriod") * 2L);
-      val st = new ScheduleTimeout(timeout);
+      val st            = new ScheduleTimeout(timeout);
       st.setTimeoutEvent(ConnectTimeout(st));
       trigger(st -> timer);
       timeoutId = Some(st.getTimeoutEvent().getTimeoutId());
       trigger(NetMessage(self, server, Connect(timeoutId.get)) -> net);
-      trigger(st -> timer);
+      trigger(st                                               -> timer);
     }
   }
 
@@ -71,7 +71,7 @@ class ClientService extends ComponentDefinition {
         System.exit(1);
       }
       connected = Some(ack);
-      val c = new ClientConsole(ClientService.this);
+      val c  = new ClientConsole(ClientService.this);
       val tc = new Thread(c);
       tc.start();
     }
@@ -98,21 +98,22 @@ class ClientService extends ComponentDefinition {
 
   loopbck uponEvent {
     case OpWithPromise(op, promise) => {
-      val rm = RouteMsg(op.key, op); // don't know which partition is responsible, so ask the bootstrap server to forward it
+      val rm =
+        RouteMsg(op.key, op); // don't know which partition is responsible, so ask the bootstrap server to forward it
       trigger(NetMessage(self, server, rm) -> net);
-      pending += (op.id -> promise);
+      pending += (op.id                    -> promise);
     }
   }
 
   def put(key: String, value: String): Future[OpResponse] = {
-    val op = PUT(key, value);
+    val op  = PUT(key, value);
     val owf = OpWithPromise(op);
     trigger(owf -> onSelf);
     owf.promise.future
   }
 
   def get(key: String): Future[OpResponse] = {
-    val op = GET(key);
+    val op  = GET(key);
     val owf = OpWithPromise(op);
     trigger(owf -> onSelf);
     owf.promise.future

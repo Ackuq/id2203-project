@@ -30,14 +30,14 @@ import se.sics.kompics.network.Network;
 import scala.collection.mutable.HashMap
 
 class KVService extends ComponentDefinition {
-  type Key = String;
+  type Key   = String;
   type Value = String;
 
   //******* Ports ******
-  private val net = requires[Network];
+  private val net   = requires[Network];
   private val route = requires(Routing);
   //******* Fields ******
-  private val self = cfg.getValue[NetAddress]("id2203.project.address");
+  private val self  = cfg.getValue[NetAddress]("id2203.project.address");
   private val store = HashMap[Key, Value]()
   //******* Handlers ******
   net uponEvent {

@@ -32,7 +32,7 @@ trait Operation extends KompicsEvent {
 }
 
 abstract class Op extends Operation with Serializable {
-  def response(status: OpCode.OpCode): OpResponse = OpResponse(None, id, status);
+  def response(status: OpCode.OpCode): OpResponse                 = OpResponse(None, id, status);
   def response(result: String, status: OpCode.OpCode): OpResponse = OpResponse(Some(result), id, status);
 }
 
@@ -44,9 +44,9 @@ case class GET(key: String, id: UUID = UUID.randomUUID()) extends Op;
 
 object OpCode {
   sealed trait OpCode;
-  case object Ok extends OpCode;
-  case object BadRequest extends OpCode;
-  case object NotFound extends OpCode;
+  case object Ok             extends OpCode;
+  case object BadRequest     extends OpCode;
+  case object NotFound       extends OpCode;
   case object NotImplemented extends OpCode;
 }
 

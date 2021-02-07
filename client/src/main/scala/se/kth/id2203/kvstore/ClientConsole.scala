@@ -35,15 +35,15 @@ import io.netty.util.concurrent.Future
 object ClientConsole {
   def lowercase[_: P] = P(CharIn("a-z"))
   def uppercase[_: P] = P(CharIn("A-Z"))
-  def digit[_: P] = P(CharIn("0-9"))
+  def digit[_: P]     = P(CharIn("0-9"))
   def simpleStr[_: P] = P(lowercase | uppercase | digit)
-  val colouredLayout = new ColoredPatternLayout("%d{[HH:mm:ss,SSS]} %-5p {%c{1}} %m%n");
+  val colouredLayout  = new ColoredPatternLayout("%d{[HH:mm:ss,SSS]} %-5p {%c{1}} %m%n");
 }
 
 class ClientConsole(val service: ClientService) extends CommandConsole with ParsedCommands with StrictLogging {
   import ClientConsole._;
 
-  override def layout: Layout = colouredLayout;
+  override def layout: Layout      = colouredLayout;
   override def onInterrupt(): Unit = exit();
 
   private def onSent(fr: ScalaFuture[OpResponse]): Unit = {
@@ -80,12 +80,11 @@ class ClientConsole(val service: ClientService) extends CommandConsole with Pars
   }
 
   val getCommand =
-    parsed(getParser, usage = "GET <key>", descr = "Executes a GET for <key>.") {
-      case key =>
-        println(s"GET with key $key");
+    parsed(getParser, usage = "GET <key>", descr = "Executes a GET for <key>.") { case key =>
+      println(s"GET with key $key");
 
-        val fr = service.get(key);
-        out.println(s"GET sent! Awaiting response...");
-        onSent(fr);
+      val fr = service.get(key);
+      out.println(s"GET sent! Awaiting response...");
+      onSent(fr);
     }
 }

@@ -40,7 +40,7 @@ class Conf(arguments: Seq[String]) extends ScallopConf(arguments) {
   footer("\n");
 
   val server = opt[NetAddress](descr = "Run in client mode and connect to bootstrap server in <arg> (ip:port)");
-  val ip = opt[InetAddress](descr = "Change local ip to <arg> (default from config file)");
+  val ip     = opt[InetAddress](descr = "Change local ip to <arg> (default from config file)");
   val port =
     opt[Int](validate = (i => (0 < i) && (i < 65535)), descr = "Change local port to <arg> (default from config file)");
   verify()
@@ -55,7 +55,7 @@ object Main {
     val conf = new Conf(args.toSeq);
     // avoid constant conversion of the address by converting once and reassigning
     // sorry Java API  only :(
-    val c = Kompics.getConfig().asInstanceOf[Config.Impl];
+    val c          = Kompics.getConfig().asInstanceOf[Config.Impl];
     val configSelf = c.getValue("id2203.project.address", classOf[NetAddress]);
     assert(configSelf != null, { "No config provided!" }); // it would be in the reference.conf
     val configBuilder = c.modify(UUID.randomUUID());

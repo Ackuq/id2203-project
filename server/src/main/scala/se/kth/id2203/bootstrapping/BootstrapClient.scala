@@ -41,10 +41,10 @@ class BootstrapClient extends ComponentDefinition {
 
   //******* Ports ******
   val bootstrap = provides(Bootstrapping);
-  val timer = requires[Timer];
-  val net = requires[Network];
+  val timer     = requires[Timer];
+  val net       = requires[Network];
   //******* Fields ******
-  val self = cfg.getValue[NetAddress]("id2203.project.address");
+  val self   = cfg.getValue[NetAddress]("id2203.project.address");
   val server = cfg.getValue[NetAddress]("id2203.project.bootstrap-address");
 
   private var state: State = Waiting;
@@ -56,7 +56,7 @@ class BootstrapClient extends ComponentDefinition {
     case _: Start => {
       log.debug("Starting bootstrap client on {}", self);
       val timeout: Long = cfg.getValue[Long]("id2203.project.keepAlivePeriod");
-      val spt = new SchedulePeriodicTimeout(timeout, timeout);
+      val spt           = new SchedulePeriodicTimeout(timeout, timeout);
       spt.setTimeoutEvent(BSTimeout(spt));
       trigger(spt -> timer);
       timeoutId = Some(spt.getTimeoutEvent().getTimeoutId());

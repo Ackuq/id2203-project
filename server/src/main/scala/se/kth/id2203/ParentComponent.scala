@@ -35,11 +35,11 @@ import se.sics.kompics.timer.Timer;
 class ParentComponent extends ComponentDefinition {
 
   //******* Ports ******
-  val net = requires[Network];
+  val net   = requires[Network];
   val timer = requires[Timer];
   //******* Children ******
   val overlay = create(classOf[VSOverlayManager], Init.NONE);
-  val kv = create(classOf[KVService], Init.NONE);
+  val kv      = create(classOf[KVService], Init.NONE);
   val boot = cfg.readValue[NetAddress]("id2203.project.bootstrap-address") match {
     case Some(_) => create(classOf[BootstrapClient], Init.NONE); // start in client mode
     case None    => create(classOf[BootstrapServer], Init.NONE); // start in server mode
@@ -50,9 +50,9 @@ class ParentComponent extends ComponentDefinition {
     connect[Network](net -> boot);
     // Overlay
     connect(Bootstrapping)(boot -> overlay);
-    connect[Network](net -> overlay);
+    connect[Network](net        -> overlay);
     // KV
     connect(Routing)(overlay -> kv);
-    connect[Network](net -> kv);
+    connect[Network](net     -> kv);
   }
 }

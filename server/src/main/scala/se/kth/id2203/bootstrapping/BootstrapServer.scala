@@ -34,8 +34,8 @@ import collection.mutable;
 object BootstrapServer {
   sealed trait State;
   case object Collecting extends State;
-  case object Seeding extends State;
-  case object Done extends State;
+  case object Seeding    extends State;
+  case object Done       extends State;
 
 }
 
@@ -43,23 +43,23 @@ class BootstrapServer extends ComponentDefinition {
   import BootstrapServer._;
 
   //******* Ports ******
-  val boot = provides(Bootstrapping);
-  val net = requires[Network];
+  val boot  = provides(Bootstrapping);
+  val net   = requires[Network];
   val timer = requires[Timer];
   //******* Fields ******
-  val self = cfg.getValue[NetAddress]("id2203.project.address");
-  val bootThreshold = cfg.getValue[Int]("id2203.project.bootThreshold");
-  private var state: State = Collecting;
-  private var timeoutId: Option[UUID] = None;
-  private val active = mutable.HashSet.empty[NetAddress];
-  private val ready = mutable.HashSet.empty[NetAddress];
+  val self                                              = cfg.getValue[NetAddress]("id2203.project.address");
+  val bootThreshold                                     = cfg.getValue[Int]("id2203.project.bootThreshold");
+  private var state: State                              = Collecting;
+  private var timeoutId: Option[UUID]                   = None;
+  private val active                                    = mutable.HashSet.empty[NetAddress];
+  private val ready                                     = mutable.HashSet.empty[NetAddress];
   private var initialAssignment: Option[NodeAssignment] = None;
   //******* Handlers ******
   ctrl uponEvent {
     case _: Start => {
       log.info("Starting bootstrap server on {}, waiting for {} nodes...", self, bootThreshold);
       val timeout: Long = (cfg.getValue[Long]("id2203.project.keepAlivePeriod") * 2L);
-      val spt = new SchedulePeriodicTimeout(timeout, timeout);
+      val spt           = new SchedulePeriodicTimeout(timeout, timeout);
       spt.setTimeoutEvent(BSTimeout(spt));
       trigger(spt -> timer);
       timeoutId = Some(spt.getTimeoutEvent().getTimeoutId());

@@ -10,6 +10,6 @@ object Bootstrapping extends Port {
   request[InitialAssignments];
 }
 
-case class GetInitialAssignments(nodes: Set[NetAddress]) extends KompicsEvent;
-case class Booted(assignment: NodeAssignment) extends KompicsEvent;
+case class GetInitialAssignments(nodes: Set[NetAddress])  extends KompicsEvent;
+case class Booted(assignment: NodeAssignment)             extends KompicsEvent;
 case class InitialAssignments(assignment: NodeAssignment) extends KompicsEvent;

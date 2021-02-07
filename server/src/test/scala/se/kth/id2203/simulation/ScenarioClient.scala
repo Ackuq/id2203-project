@@ -37,31 +37,33 @@ import collection.mutable;
 class ScenarioClient extends ComponentDefinition {
 
   //******* Ports ******
-  val net = requires[Network];
+  val net   = requires[Network];
   val timer = requires[Timer];
   //******* Fields ******
-  val self = cfg.getValue[NetAddress]("id2203.project.address");
-  val server = cfg.getValue[NetAddress]("id2203.project.bootstrap-address");
+  val self            = cfg.getValue[NetAddress]("id2203.project.address");
+  val server          = cfg.getValue[NetAddress]("id2203.project.bootstrap-address");
   private val pending = mutable.Map.empty[UUID, String];
   //******* Handlers ******
   ctrl uponEvent {
     case _: Start => {
       val messages = SimulationResult[Int]("messages");
       for (i <- 0 to messages) {
-        val op = new PUT(s"put$i", s"value$i");
+        val op  = new PUT(s"put$i", s"value$i");
         val key = s"${op.key}.put"
-        val routeMsg = RouteMsg(op.key, op); // don't know which partition is responsible, so ask the bootstrap server to forward it
+        val routeMsg =
+          RouteMsg(op.key, op); // don't know which partition is responsible, so ask the bootstrap server to forward it
         trigger(NetMessage(self, server, routeMsg) -> net);
-        pending += (op.id -> key);
+        pending += (op.id                          -> key);
         logger.info("Sending {}", op);
         SimulationResult += (key -> "Sent");
       }
       for (i <- 0 to messages) {
-        val op = new GET(s"put$i");
+        val op  = new GET(s"put$i");
         val key = s"${op.key}.get"
-        val routeMsg = RouteMsg(op.key, op); // don't know which partition is responsible, so ask the bootstrap server to forward it
+        val routeMsg =
+          RouteMsg(op.key, op); // don't know which partition is responsible, so ask the bootstrap server to forward it
         trigger(NetMessage(self, server, routeMsg) -> net);
-        pending += (op.id -> key);
+        pending += (op.id                          -> key);
         logger.info("Sending {}", op);
         SimulationResult += (key -> "Sent");
       }

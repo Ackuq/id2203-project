@@ -36,14 +36,14 @@ object NetAddressConverter extends Converter[NetAddress] with StrictLogging {
       o match {
         case m: Map[_, _] => {
           val hostname: String = Conversions.convert(m.get("ip"), classOf[String]);
-          val port: Int = Conversions.convert(m.get("port"), classOf[Integer]);
-          val ip = InetAddress.getByName(hostname);
+          val port: Int        = Conversions.convert(m.get("port"), classOf[Integer]);
+          val ip               = InetAddress.getByName(hostname);
           return NetAddress(ip, port);
         }
         case s: String => {
           val ipport = s.split(":");
-          val ip = InetAddress.getByName(ipport(0));
-          val port = Integer.parseInt(ipport(1));
+          val ip     = InetAddress.getByName(ipport(0));
+          val port   = Integer.parseInt(ipport(1));
           return NetAddress(ip, port);
         }
       }

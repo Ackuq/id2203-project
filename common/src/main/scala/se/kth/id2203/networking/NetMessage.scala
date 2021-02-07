@@ -38,8 +38,8 @@ object NetAddress {
 @SerialVersionUID(564943678129824753L)
 final case class NetAddress(isa: InetSocketAddress) extends Address with Serializable {
   override def asSocket(): InetSocketAddress = isa;
-  override def getIp(): InetAddress = isa.getAddress;
-  override def getPort(): Int = isa.getPort;
+  override def getIp(): InetAddress          = isa.getAddress;
+  override def getPort(): Int                = isa.getPort;
   override def sameHostAs(other: Address): Boolean = {
     this.isa.equals(other.asSocket());
   }
@@ -50,8 +50,8 @@ final case class NetHeader(src: NetAddress, dst: NetAddress, proto: Transport)
     extends Header[NetAddress]
     with Serializable {
   override def getDestination(): NetAddress = dst;
-  override def getProtocol(): Transport = proto;
-  override def getSource(): NetAddress = src;
+  override def getProtocol(): Transport     = proto;
+  override def getSource(): NetAddress      = src;
 }
 
 @SerialVersionUID(6650033691019681053L)
@@ -59,9 +59,9 @@ final case class NetMessage[C <: KompicsEvent](header: NetHeader, payload: C)
     extends Msg[NetAddress, NetHeader]
     with Serializable {
   override def getDestination(): NetAddress = header.dst;
-  override def getHeader(): NetHeader = header;
-  override def getProtocol(): Transport = header.proto;
-  override def getSource(): NetAddress = header.src;
+  override def getHeader(): NetHeader       = header;
+  override def getProtocol(): Transport     = header.proto;
+  override def getSource(): NetAddress      = header.src;
 }
 
 object NetMessage {
