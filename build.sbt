@@ -55,33 +55,33 @@ lazy val client = (project in file("client"))
 
 lazy val deps =
   new {
-    val logbackV = "1.2.+"
+    val logbackV      = "1.2.+"
     val scalaLoggingV = "3.9.+"
-    val scalatestV = "3.1.0"
-    val kompicsV = "1.2.1"
+    val scalatestV    = "3.1.0"
+    val kompicsV      = "1.2.1"
     val kompicsScalaV = "2.0.+"
-    val commonUtilsV = "2.1.0"
-    val scallopV = "3.3.0"
-    val jlineV = "3.5.1"
-    val log4jV = "1.2.+"
-    val slf4jV = "1.7.+"
-    val fastparseV = "2.1.3"
+    val commonUtilsV  = "2.1.0"
+    val scallopV      = "3.3.0"
+    val jlineV        = "3.5.1"
+    val log4jV        = "1.2.+"
+    val slf4jV        = "1.7.+"
+    val fastparseV    = "2.1.3"
 
-    val logback = "ch.qos.logback" % "logback-classic" % logbackV
-    val scalaLogging = "com.typesafe.scala-logging" %% "scala-logging" % scalaLoggingV
-    val scalatest = "org.scalatest" %% "scalatest" % scalatestV
-    val kompics = "se.sics.kompics" %% "kompics-scala" % kompicsScalaV
-    val kNetwork = "se.sics.kompics.basic" % "kompics-port-network" % kompicsV
-    val nettyNetwork = "se.sics.kompics.basic" % "kompics-component-netty-network" % kompicsV
-    val kTimer = "se.sics.kompics.basic" % "kompics-port-timer" % kompicsV
-    val javaTimer = "se.sics.kompics.basic" % "kompics-component-java-timer" % kompicsV
-    val kSim = "se.sics.kompics" %% "kompics-scala-simulator" % kompicsScalaV
-    val commonUtils = "com.larskroll" %% "common-utils-scala" % commonUtilsV
-    val scallop = "org.rogach" %% "scallop" % scallopV
-    val jline = "org.jline" % "jline" % jlineV
-    val log4j = "log4j" % "log4j" % log4jV
-    val log4jSlf4j = "org.slf4j" % "slf4j-log4j12" % slf4jV
-    val fastparse = "com.lihaoyi" %% "fastparse" % fastparseV
+    val logback      = "ch.qos.logback"              % "logback-classic"                 % logbackV
+    val scalaLogging = "com.typesafe.scala-logging" %% "scala-logging"                   % scalaLoggingV
+    val scalatest    = "org.scalatest"              %% "scalatest"                       % scalatestV
+    val kompics      = "se.sics.kompics"            %% "kompics-scala"                   % kompicsScalaV
+    val kNetwork     = "se.sics.kompics.basic"       % "kompics-port-network"            % kompicsV
+    val nettyNetwork = "se.sics.kompics.basic"       % "kompics-component-netty-network" % kompicsV
+    val kTimer       = "se.sics.kompics.basic"       % "kompics-port-timer"              % kompicsV
+    val javaTimer    = "se.sics.kompics.basic"       % "kompics-component-java-timer"    % kompicsV
+    val kSim         = "se.sics.kompics"            %% "kompics-scala-simulator"         % kompicsScalaV
+    val commonUtils  = "com.larskroll"              %% "common-utils-scala"              % commonUtilsV
+    val scallop      = "org.rogach"                 %% "scallop"                         % scallopV
+    val jline        = "org.jline"                   % "jline"                           % jlineV
+    val log4j        = "log4j"                       % "log4j"                           % log4jV
+    val log4jSlf4j   = "org.slf4j"                   % "slf4j-log4j12"                   % slf4jV
+    val fastparse    = "com.lihaoyi"                %% "fastparse"                       % fastparseV
   }
 
 lazy val commonDependencies = Seq(
