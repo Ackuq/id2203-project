@@ -23,7 +23,8 @@
  */
 package se.kth.id2203.simulation
 
-import org.scalatest._
+import org.scalatest.flatspec.AnyFlatSpec;
+import org.scalatest.matchers.should.Matchers;
 import se.kth.id2203.ParentComponent;
 import se.kth.id2203.networking._;
 import se.sics.kompics.network.Address
@@ -37,7 +38,7 @@ import se.sics.kompics.simulator.network.impl.NetworkModels
 import scala.concurrent.duration._
 import se.kth.id2203.kvstore.OpCode.NotFound
 
-class OpsTest extends FlatSpec with Matchers {
+class OpsTest extends AnyFlatSpec with Matchers {
 
   private val nMessages = 10;
 
@@ -62,7 +63,7 @@ class OpsTest extends FlatSpec with Matchers {
     val seed = 123L;
     JSimulationScenario.setSeed(seed);
     val simpleBootScenario = SimpleScenario.scenario(3);
-    val res = SimulationResultSingleton.getInstance();
+    val res                = SimulationResultSingleton.getInstance();
     SimulationResult += ("messages" -> nMessages);
     simpleBootScenario.simulate(classOf[LauncherComp]);
     for (i <- 0 to nMessages) {
@@ -70,8 +71,8 @@ class OpsTest extends FlatSpec with Matchers {
       SimulationResult.get[String](s"put$i.put") should be(Some(s"value$i"));
     }
     for (i <- 0 to nMessages) {
-      // GETs, sometimes the PUT's might not have been processed yet, so accept not found
-      SimulationResult.get[String](s"put$i.get") should (be(Some(s"value$i")) or be(Some("NotFound")));
+      // GETs
+      SimulationResult.get[String](s"put$i.get") should be(Some(s"value$i"));
     }
   }
 
@@ -100,7 +101,7 @@ object SimpleScenario {
 
   private def isBootstrap(self: Int): Boolean = self == 1;
 
-  val setUniformLatencyNetwork = () => Op.apply((_: Unit) => ChangeNetwork(NetworkModels.withUniformRandomDelay(3, 7)));
+  val setUniformLatencyNetwork = () => Op.apply((_: Unit) => ChangeNetwork(NetworkModels.withConstantDelay(2)));
 
   val startServerOp = Op { (self: Integer) =>
     val selfAddr = intToServerAddress(self)
@@ -115,15 +116,15 @@ object SimpleScenario {
 
   val startClientOp = Op { (self: Integer) =>
     val selfAddr = intToClientAddress(self)
-    val conf = Map("id2203.project.address" -> selfAddr, "id2203.project.bootstrap-address" -> intToServerAddress(1));
+    val conf     = Map("id2203.project.address" -> selfAddr, "id2203.project.bootstrap-address" -> intToServerAddress(1));
     StartNode(selfAddr, Init.none[ScenarioClient], conf);
   };
 
   def scenario(servers: Int): JSimulationScenario = {
 
     val networkSetup = raise(1, setUniformLatencyNetwork()).arrival(constant(0));
-    val startCluster = raise(servers, startServerOp, 1.toN).arrival(constant(1.second));
-    val startClients = raise(1, startClientOp, 1.toN).arrival(constant(1.second));
+    val startCluster = raise(servers, startServerOp, 1.toN()).arrival(constant(1.second));
+    val startClients = raise(1, startClientOp, 1.toN()).arrival(constant(1.second));
 
     networkSetup andThen
       0.seconds afterTermination startCluster andThen

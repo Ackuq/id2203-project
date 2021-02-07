@@ -47,16 +47,17 @@ class VSOverlayManager extends ComponentDefinition {
   val net   = requires[Network];
   val timer = requires[Timer];
   //******* Fields ******
-  val self = cfg.getValue[NetAddress]("id2203.project.address");
-  /* How many replications we should manage */
-  val replicationDegree                = cfg.getValue[Int]("id2203.project.replicationDegree");
+  val self                             = cfg.getValue[NetAddress]("id2203.project.address");
   private var lut: Option[LookupTable] = None;
   //******* Handlers ******
   boot uponEvent {
     case GetInitialAssignments(nodes) => {
       log.info("Generating LookupTable...");
-      val lut = LookupTable.generate(nodes, replicationDegree);
-      logger.debug("Generated assignments:\n$lut");
+      val lut = LookupTable.generate(nodes,
+                                     cfg.getValue[Int]("id2203.project.replicationDegree"),
+                                     cfg.getValue[Int]("id2203.project.keyRange")
+      );
+      logger.debug(s"Generated assignments:\n$lut");
       trigger(new InitialAssignments(lut) -> boot);
     }
     case Booted(assignment: LookupTable) => {
@@ -67,12 +68,26 @@ class VSOverlayManager extends ComponentDefinition {
 
   net uponEvent {
     case NetMessage(header, RouteMsg(key, msg)) => {
-      val nodes = lut.get.lookup(key);
+      val nodes = lut.get.lookup(key).toSet;
       assert(!nodes.isEmpty);
-      val i      = Random.nextInt(nodes.size);
-      val target = nodes.drop(i).head;
-      log.info(s"Forwarding message for key $key to $target");
-      trigger(NetMessage(header.src, target, msg) -> net);
+
+      if (nodes.contains(self)) {
+        /* Broadcast to group
+         * TODO: Proper broadcast
+         */
+        for (node <- nodes) {
+          trigger(NetMessage(header.src, node, msg) -> net);
+        }
+
+      } else {
+        /* Forward to some member in the designated replication group
+          The receiving node will take care of the broadcast */
+        val i      = Random.nextInt(nodes.size);
+        val target = nodes.drop(i).head;
+        log.info(s"Forwarding message for key $key to $target");
+        trigger(NetMessage(header.src, target, msg) -> net);
+      }
+
     }
     case NetMessage(header, msg: Connect) => {
       lut match {
