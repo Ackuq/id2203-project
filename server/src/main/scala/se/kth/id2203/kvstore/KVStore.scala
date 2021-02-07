@@ -42,21 +42,15 @@ class KVService extends ComponentDefinition {
   //******* Handlers ******
   net uponEvent {
     case NetMessage(header, op: Op) => {
-      op.method match {
+      op match {
         // Store value and respond
-        case PUT =>
-          op.value match {
-            case Some(value) =>
-              store.put(op.key, value);
-              trigger(
-                NetMessage(self, header.src, op.response(value, OpCode.Ok)) -> net
-              )
-            case None =>
-              trigger(
-                NetMessage(self, header.src, op.response(OpCode.BadRequest)) -> net
-              )
-          }
-        case GET =>
+        case PUT(key, value, id) =>
+          store.put(op.key, value);
+          trigger(
+            NetMessage(self, header.src, op.response(value, OpCode.Ok)) -> net
+          )
+
+        case GET(key, id) =>
           store.get(op.key) match {
             case Some(value) =>
               trigger(NetMessage(self, header.src, op.response(value, OpCode.Ok)) -> net)

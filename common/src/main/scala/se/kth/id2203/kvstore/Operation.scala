@@ -31,17 +31,16 @@ trait Operation extends KompicsEvent {
   def key: String;
 }
 
-trait Method
-case object PUT extends Method;
-case object GET extends Method;
-
-@SerialVersionUID(-374812437823538710L)
-case class Op(method: Method, key: String, value: Option[String] = None, id: UUID = UUID.randomUUID())
-    extends Operation
-    with Serializable {
+abstract class Op extends Operation with Serializable {
   def response(status: OpCode.OpCode): OpResponse = OpResponse(None, id, status);
   def response(result: String, status: OpCode.OpCode): OpResponse = OpResponse(Some(result), id, status);
 }
+
+@SerialVersionUID(-374812437823538710L)
+case class PUT(key: String, value: String, id: UUID = UUID.randomUUID()) extends Op;
+
+@SerialVersionUID(-5302359464069541373L)
+case class GET(key: String, id: UUID = UUID.randomUUID()) extends Op;
 
 object OpCode {
   sealed trait OpCode;

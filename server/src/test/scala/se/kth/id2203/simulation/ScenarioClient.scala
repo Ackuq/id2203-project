@@ -48,7 +48,7 @@ class ScenarioClient extends ComponentDefinition {
     case _: Start => {
       val messages = SimulationResult[Int]("messages");
       for (i <- 0 to messages) {
-        val op = new Op(PUT, s"put$i", Some(s"value$i"));
+        val op = new PUT(s"put$i", s"value$i");
         val key = s"${op.key}.put"
         val routeMsg = RouteMsg(op.key, op); // don't know which partition is responsible, so ask the bootstrap server to forward it
         trigger(NetMessage(self, server, routeMsg) -> net);
@@ -57,7 +57,7 @@ class ScenarioClient extends ComponentDefinition {
         SimulationResult += (key -> "Sent");
       }
       for (i <- 0 to messages) {
-        val op = new Op(GET, s"put$i");
+        val op = new GET(s"put$i");
         val key = s"${op.key}.get"
         val routeMsg = RouteMsg(op.key, op); // don't know which partition is responsible, so ask the bootstrap server to forward it
         trigger(NetMessage(self, server, routeMsg) -> net);
