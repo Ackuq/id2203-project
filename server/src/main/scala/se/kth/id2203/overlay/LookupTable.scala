@@ -51,6 +51,15 @@ class LookupTable(val replicationDegree: Int, val keyRange: Int) extends NodeAss
     return partitions(partition);
   }
 
+  def getGroup(address: NetAddress): Set[NetAddress] = {
+    for (partition <- partitions) {
+      if (partition._2.exists(a => a.sameHostAs(address))) {
+        return partition._2.toSet;
+      }
+    }
+    throw new IllegalArgumentException("Woops, you're not in a group, something went wrong...");
+  }
+
   def getNodes(): Set[NetAddress] = partitions.foldLeft(Set.empty[NetAddress]) { case (acc, kv) =>
     acc ++ kv._2
   }

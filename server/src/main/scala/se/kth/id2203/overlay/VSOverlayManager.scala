@@ -29,8 +29,10 @@ import se.sics.kompics.sl._;
 import se.sics.kompics.network.Network;
 import se.sics.kompics.timer.Timer;
 import util.Random;
-import se.kth.id2203.protocols.rb.{RB_Broadcast, ReliableBroadcastPort}
-import se.kth.id2203.protocols.perfect_link.{PL_Forward, PerfectLinkPort}
+import se.kth.id2203.utils.{GROUP};
+import se.kth.id2203.protocols.rb.{RB_Broadcast, ReliableBroadcastPort};
+import se.kth.id2203.protocols.perfect_link.{PL_Forward, PerfectLinkPort};
+import se.kth.id2203.protocols.perfect_link.PL_Send;
 
 /** The V(ery)S(imple)OverlayManager.
   * <p>
@@ -68,6 +70,12 @@ class VSOverlayManager extends ComponentDefinition {
     case Booted(assignment: LookupTable) => {
       log.info("Got NodeAssignment, overlay ready.");
       lut = Some(assignment);
+
+      // Our current group
+      val myGroup = lut.get.getGroup(self);
+
+      // Send this to every component that might need
+      trigger(PL_Send(self, GROUP(myGroup)) -> pLink);
     }
   }
 
