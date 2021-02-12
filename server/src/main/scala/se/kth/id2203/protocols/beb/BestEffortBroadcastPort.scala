@@ -1,4 +1,4 @@
-package se.kth.id2203.broadcast.beb
+package se.kth.id2203.protocols.beb
 
 import se.sics.kompics.sl._;
 

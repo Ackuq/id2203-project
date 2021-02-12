@@ -1,7 +1,7 @@
 package se.kth.id2203.protocols.rb
 
 import se.sics.kompics.sl._;
-import se.kth.id2203.broadcast.beb.{BEB_Broadcast, BEB_Deliver, BestEffortBroadcastPort}
+import se.kth.id2203.protocols.beb.{BEB_Broadcast, BEB_Deliver, BestEffortBroadcastPort}
 import se.kth.id2203.networking.NetAddress
 
 /** Eager implementation of reliable broadcast

@@ -19,6 +19,9 @@ class PerfectLink extends ComponentDefinition {
     case PL_Send(dst: NetAddress, payload: KompicsEvent) => {
       trigger(NetMessage(self, dst, payload) -> net)
     }
+    case PL_Forward(src: NetAddress, dst: NetAddress, payload: KompicsEvent) => {
+      trigger(NetMessage(src, dst, payload) -> net);
+    }
   }
 
   net uponEvent {

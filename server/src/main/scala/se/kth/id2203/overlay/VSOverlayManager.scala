@@ -29,6 +29,8 @@ import se.sics.kompics.sl._;
 import se.sics.kompics.network.Network;
 import se.sics.kompics.timer.Timer;
 import util.Random;
+import se.kth.id2203.protocols.rb.{RB_Broadcast, ReliableBroadcastPort}
+import se.kth.id2203.protocols.perfect_link.{PL_Forward, PerfectLinkPort}
 
 /** The V(ery)S(imple)OverlayManager.
   * <p>
@@ -46,6 +48,9 @@ class VSOverlayManager extends ComponentDefinition {
   val boot  = requires(Bootstrapping);
   val net   = requires[Network];
   val timer = requires[Timer];
+  //******* Custom Ports ******
+  val pLink = requires[PerfectLinkPort];
+  val rb    = requires[ReliableBroadcastPort];
   //******* Fields ******
   val self                             = cfg.getValue[NetAddress]("id2203.project.address");
   private var lut: Option[LookupTable] = None;
@@ -76,9 +81,8 @@ class VSOverlayManager extends ComponentDefinition {
          * TODO: Proper broadcast
          */
         for (node <- nodes) {
-          trigger(NetMessage(header.src, node, msg) -> net);
+          trigger(PL_Forward(header.src, node, msg) -> pLink);
         }
-
       } else {
         /* Forward to some member in the designated replication group
           The receiving node will take care of the broadcast */

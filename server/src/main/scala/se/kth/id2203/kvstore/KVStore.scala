@@ -28,6 +28,8 @@ import se.kth.id2203.overlay.Routing;
 import se.sics.kompics.sl._;
 import se.sics.kompics.network.Network;
 import scala.collection.mutable.HashMap
+import se.kth.id2203.protocols.perfect_link.PerfectLinkPort
+import se.kth.id2203.protocols.perfect_link.PL_Deliver
 
 class KVService extends ComponentDefinition {
   type Key   = String;
