@@ -15,17 +15,17 @@ class EagerReliableBroadcast extends ComponentDefinition {
   val delivered = collection.mutable.Set[KompicsEvent]();
 
   rbPort uponEvent {
-    case x @ RB_Broadcast(payload) => {
-      trigger(BEB_Broadcast(x) -> bebPort);
+    case x @ RB_Broadcast(nodes, payload) => {
+      trigger(BEB_Broadcast(nodes, x) -> bebPort);
     }
   }
 
   bebPort uponEvent {
-    case BEB_Deliver(src, y @ RB_Broadcast(payload)) => {
+    case BEB_Deliver(src, y @ RB_Broadcast(nodes, payload)) => {
       if (!delivered.contains(payload)) {
         delivered += payload;
         trigger(RB_Deliver(src, payload) -> rbPort);
-        trigger(BEB_Broadcast(y)         -> bebPort)
+        trigger(BEB_Broadcast(nodes, y)  -> bebPort)
       }
     }
   }

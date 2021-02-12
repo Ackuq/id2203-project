@@ -78,8 +78,9 @@ class VSOverlayManager extends ComponentDefinition {
 
       if (nodes.contains(self)) {
         /* Broadcast to group
-         * TODO: Proper broadcast
+         * TODO: Proper atomic register broadcast
          */
+        // trigger(RB_Broadcast(nodes, msg) -> rb)
         for (node <- nodes) {
           trigger(PL_Forward(header.src, node, msg) -> pLink);
         }
