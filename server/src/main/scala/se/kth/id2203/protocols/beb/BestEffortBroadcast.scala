@@ -7,32 +7,27 @@ import se.kth.id2203.overlay.LookupTable;
 
 /** Implementation of best effort broadcast
   */
-class BestEffortBroadcast extends ComponentDefinition {
+class BestEffortBroadcast(init: Init[BestEffortBroadcast]) extends ComponentDefinition {
   val self = cfg.getValue[NetAddress]("id2203.project.address");
+
+  val topology = init match {
+    case Init(topology: Set[NetAddress] @unchecked) => topology
+    case _                                          => Set.empty[NetAddress]
+  }
 
   val pLink   = requires[PerfectLinkPort];
   val bebPort = provides[BestEffortBroadcastPort]
 
   bebPort uponEvent {
-    case x @ BEB_Broadcast(nodes, _) => {
-      for (p <- nodes) {
+    case x @ BEB_Broadcast(_) => {
+      for (p <- topology) {
         trigger(PL_Send(p, x) -> pLink)
-      }
-    }
-    case x @ BEB_Broadcast_Forward(nodes, src, _) => {
-      for (p <- nodes) {
-        trigger(PL_Forward(src, p, x) -> pLink)
       }
     }
   }
 
   pLink uponEvent {
-    case PL_Deliver(src, BEB_Broadcast(_, payload)) => {
-      trigger(
-        BEB_Deliver(src, payload) -> bebPort
-      )
-    }
-    case PL_Deliver(src, BEB_Broadcast_Forward(_, org, payload)) => {
+    case PL_Deliver(src, BEB_Broadcast(payload)) => {
       trigger(
         BEB_Deliver(src, payload) -> bebPort
       )

@@ -32,7 +32,6 @@ import util.Random;
 import se.kth.id2203.utils.{GROUP};
 import se.kth.id2203.protocols.perfect_link.{PL_Forward, PerfectLinkPort};
 import se.kth.id2203.protocols.perfect_link.PL_Send;
-import se.kth.id2203.protocols.beb.BEB_Broadcast_Forward
 import se.kth.id2203.protocols.beb.BestEffortBroadcastPort
 
 /** The V(ery)S(imple)OverlayManager.
@@ -52,7 +51,8 @@ class VSOverlayManager extends ComponentDefinition {
   val net   = requires[Network];
   val timer = requires[Timer];
   //******* Custom Ports ******
-  val beb = requires[BestEffortBroadcastPort];
+  val pLink = requires[PerfectLinkPort];
+
   //******* Fields ******
   val self                             = cfg.getValue[NetAddress]("id2203.project.address");
   private var lut: Option[LookupTable] = None;
@@ -80,7 +80,9 @@ class VSOverlayManager extends ComponentDefinition {
 
       if (nodes.contains(self)) {
         /* Send message to group */
-        trigger(BEB_Broadcast_Forward(nodes, header.src, msg) -> beb);
+        for (p <- nodes) {
+          trigger(PL_Forward(header.src, p, msg) -> pLink);
+        }
       } else {
         /* Forward to some member in the designated replication group
           The receiving node will take care of the broadcast */

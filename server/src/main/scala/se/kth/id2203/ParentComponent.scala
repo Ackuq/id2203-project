@@ -43,31 +43,29 @@ class ParentComponent extends ComponentDefinition {
   val timer = requires[Timer];
   //******* Custom components ******
   val pLink = create(classOf[PerfectLink], Init.NONE);
-  val beb   = create(classOf[BestEffortBroadcast], Init.NONE);
   //******* Children ******
   val overlay = create(classOf[VSOverlayManager], Init.NONE);
-  val kv      = create(classOf[KVService], Init.NONE);
   val boot = cfg.readValue[NetAddress]("id2203.project.bootstrap-address") match {
     case Some(_) => create(classOf[BootstrapClient], Init.NONE); // start in client mode
     case None    => create(classOf[BootstrapServer], Init.NONE); // start in server mode
   }
 
+  val replicaWrapper = create(classOf[ReplicaWrapper], Init.NONE);
+
   {
     // Perfect Link
     connect[Network](net -> pLink);
-    // Best Effort Broadcast
-    connect[PerfectLinkPort](pLink -> beb);
     // Bootstrap
     connect[Timer](timer -> boot);
     connect[Network](net -> boot);
     // Overlay
-    connect(Bootstrapping)(boot          -> overlay);
-    connect[Network](net                 -> overlay);
-    connect[BestEffortBroadcastPort](beb -> overlay);
-    // KV
-    connect(Routing)(overlay       -> kv);
-    connect[Network](net           -> kv);
-    connect[PerfectLinkPort](pLink -> kv);
-
+    connect(Bootstrapping)(boot    -> overlay);
+    connect[Network](net           -> overlay);
+    connect[PerfectLinkPort](pLink -> overlay);
+    // Replica wrapper
+    connect[PerfectLinkPort](pLink -> replicaWrapper);
+    connect[Network](net           -> replicaWrapper);
+    connect(Bootstrapping)(boot    -> replicaWrapper);
+    connect[Timer](timer           -> replicaWrapper);
   }
 }
