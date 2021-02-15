@@ -29,5 +29,4 @@ class PerfectLink extends ComponentDefinition {
       trigger(PL_Deliver(header.src, payload) -> pLink)
     }
   }
-
 }

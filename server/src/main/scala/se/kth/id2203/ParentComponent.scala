@@ -61,12 +61,13 @@ class ParentComponent extends ComponentDefinition {
     connect[Timer](timer -> boot);
     connect[Network](net -> boot);
     // Overlay
-    connect(Bootstrapping)(boot    -> overlay);
-    connect[Network](net           -> overlay);
-    connect[PerfectLinkPort](pLink -> overlay);
+    connect(Bootstrapping)(boot          -> overlay);
+    connect[Network](net                 -> overlay);
+    connect[BestEffortBroadcastPort](beb -> overlay);
     // KV
-    connect(Routing)(overlay -> kv);
-    connect[Network](net     -> kv);
+    connect(Routing)(overlay       -> kv);
+    connect[Network](net           -> kv);
+    connect[PerfectLinkPort](pLink -> kv);
 
   }
 }

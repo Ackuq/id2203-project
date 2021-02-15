@@ -30,37 +30,45 @@ import se.sics.kompics.network.Network;
 import scala.collection.mutable.HashMap
 import se.kth.id2203.protocols.perfect_link.PerfectLinkPort
 import se.kth.id2203.protocols.perfect_link.PL_Deliver
+import se.kth.id2203.protocols.beb.BEB_Broadcast_Forward
 
+/** Key-value store
+  * TODO: Paxos
+  */
 class KVService extends ComponentDefinition {
+
   type Key   = String;
   type Value = String;
 
   //******* Ports ******
   private val net   = requires[Network];
   private val route = requires(Routing);
+  //******* Custom portys ******
+  private val pLink = requires[PerfectLinkPort];
   //******* Fields ******
   private val self  = cfg.getValue[NetAddress]("id2203.project.address");
   private val store = HashMap[Key, Value]()
   //******* Handlers ******
-  net uponEvent {
-    case NetMessage(header, op: Op) => {
+  pLink uponEvent {
+    case PL_Deliver(_, BEB_Broadcast_Forward(_, src, op: Op)) => {
       op match {
+
         // Store value and respond
         case PUT(key, value, id) =>
           store.put(op.key, value);
           trigger(
-            NetMessage(self, header.src, op.response(value, OpCode.Ok)) -> net
+            NetMessage(self, src, op.response(value, OpCode.Ok)) -> net
           )
 
         case GET(key, id) =>
           store.get(op.key) match {
             case Some(value) =>
-              trigger(NetMessage(self, header.src, op.response(value, OpCode.Ok)) -> net)
+              trigger(NetMessage(self, src, op.response(value, OpCode.Ok)) -> net)
             case None =>
-              trigger(NetMessage(self, header.src, op.response(OpCode.NotFound)) -> net)
+              trigger(NetMessage(self, src, op.response(OpCode.NotFound)) -> net)
           }
         case _ =>
-          trigger(NetMessage(self, header.src, op.response(OpCode.NotImplemented)) -> net);
+          trigger(NetMessage(self, src, op.response(OpCode.NotImplemented)) -> net);
       }
     }
   }
