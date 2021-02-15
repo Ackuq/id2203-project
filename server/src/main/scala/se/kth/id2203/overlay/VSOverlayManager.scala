@@ -30,7 +30,6 @@ import se.sics.kompics.network.Network;
 import se.sics.kompics.timer.Timer;
 import util.Random;
 import se.kth.id2203.utils.{GROUP};
-import se.kth.id2203.protocols.rb.{RB_Broadcast, ReliableBroadcastPort};
 import se.kth.id2203.protocols.perfect_link.{PL_Forward, PerfectLinkPort};
 import se.kth.id2203.protocols.perfect_link.PL_Send;
 
@@ -52,7 +51,6 @@ class VSOverlayManager extends ComponentDefinition {
   val timer = requires[Timer];
   //******* Custom Ports ******
   val pLink = requires[PerfectLinkPort];
-  val rb    = requires[ReliableBroadcastPort];
   //******* Fields ******
   val self                             = cfg.getValue[NetAddress]("id2203.project.address");
   private var lut: Option[LookupTable] = None;
@@ -70,12 +68,6 @@ class VSOverlayManager extends ComponentDefinition {
     case Booted(assignment: LookupTable) => {
       log.info("Got NodeAssignment, overlay ready.");
       lut = Some(assignment);
-
-      // Our current group
-      val myGroup = lut.get.getGroup(self);
-
-      // Send this to every component that might need
-      trigger(PL_Send(self, GROUP(myGroup)) -> pLink);
     }
   }
 
@@ -85,10 +77,7 @@ class VSOverlayManager extends ComponentDefinition {
       assert(!nodes.isEmpty);
 
       if (nodes.contains(self)) {
-        /* Broadcast to group
-         * TODO: Proper atomic register broadcast
-         */
-        // trigger(RB_Broadcast(nodes, msg) -> rb)
+        /* Send message to group */
         for (node <- nodes) {
           trigger(PL_Forward(header.src, node, msg) -> pLink);
         }

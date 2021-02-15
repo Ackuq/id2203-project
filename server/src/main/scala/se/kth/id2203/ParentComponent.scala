@@ -35,7 +35,6 @@ import se.sics.kompics.timer.Timer;
 /** Custom Protocol */
 import se.kth.id2203.protocols.perfect_link.{PerfectLink, PerfectLinkPort};
 import se.kth.id2203.protocols.beb.{BestEffortBroadcast, BestEffortBroadcastPort};
-import se.kth.id2203.protocols.rb.{EagerReliableBroadcast, ReliableBroadcastPort};
 
 class ParentComponent extends ComponentDefinition {
 
@@ -45,7 +44,6 @@ class ParentComponent extends ComponentDefinition {
   //******* Custom components ******
   val pLink = create(classOf[PerfectLink], Init.NONE);
   val beb   = create(classOf[BestEffortBroadcast], Init.NONE);
-  val rb    = create(classOf[EagerReliableBroadcast], Init.NONE);
   //******* Children ******
   val overlay = create(classOf[VSOverlayManager], Init.NONE);
   val kv      = create(classOf[KVService], Init.NONE);
@@ -59,16 +57,13 @@ class ParentComponent extends ComponentDefinition {
     connect[Network](net -> pLink);
     // Best Effort Broadcast
     connect[PerfectLinkPort](pLink -> beb);
-    // (Eager) Reliable Broadcast
-    connect[BestEffortBroadcastPort](beb -> rb);
     // Bootstrap
     connect[Timer](timer -> boot);
     connect[Network](net -> boot);
     // Overlay
-    connect(Bootstrapping)(boot       -> overlay);
-    connect[Network](net              -> overlay);
-    connect[PerfectLinkPort](pLink    -> overlay);
-    connect[ReliableBroadcastPort](rb -> overlay);
+    connect(Bootstrapping)(boot    -> overlay);
+    connect[Network](net           -> overlay);
+    connect[PerfectLinkPort](pLink -> overlay);
     // KV
     connect(Routing)(overlay -> kv);
     connect[Network](net     -> kv);
