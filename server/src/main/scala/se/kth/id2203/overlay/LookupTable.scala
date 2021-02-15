@@ -86,12 +86,11 @@ object LookupTable {
     val lut           = new LookupTable(replicationDegree, keyRange);
     val partitionSize = lut.replicationDegree + 1
     /* If we can fit all of the partition */
-    val step      = if (nodes.size % partitionSize == 0) partitionSize else 1;
     var partition = 0
 
     /* Divide into partitions and add the partitions to the table */
     nodes
-      .sliding(partitionSize, step)
+      .sliding(partitionSize, partitionSize)
       .foreach(group => {
         lut.partitions ++= (partition -> group);
         partition += lut.keyRange;
