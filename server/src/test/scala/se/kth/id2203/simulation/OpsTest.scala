@@ -131,5 +131,4 @@ object SimpleScenario {
       10.seconds afterTermination startClients andThen
       100.seconds afterTermination Terminate
   }
-
 }

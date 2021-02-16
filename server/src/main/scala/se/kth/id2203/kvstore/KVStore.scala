@@ -28,12 +28,11 @@ import se.kth.id2203.overlay.Routing;
 import se.sics.kompics.sl._;
 import se.sics.kompics.network.Network;
 import scala.collection.mutable.HashMap
-import se.kth.id2203.protocols.perfect_link.PerfectLinkPort
-import se.kth.id2203.protocols.perfect_link.PL_Deliver
+import se.kth.id2203.protocols.perfect_link.{PL_Deliver, PerfectLinkPort}
+import se.kth.id2203.protocols.sequence_consencus.{SC_Decide, SC_Propose, SequenceConsensusPort}
+import se.kth.id2203.protocols.sequence_consencus.Role
 
-/** Key-value store
-  * TODO: Paxos
-  */
+/** Key-value store */
 class KVService extends ComponentDefinition {
 
   type Key   = String;
@@ -42,30 +41,45 @@ class KVService extends ComponentDefinition {
   //******* Ports ******
   private val net = requires[Network];
   //******* Custom ports ******
-  private val pLink = requires[PerfectLinkPort];
+  private val pLink   = requires[PerfectLinkPort];
+  private val seqCons = requires[SequenceConsensusPort];
   //******* Fields ******
   private val self  = cfg.getValue[NetAddress]("id2203.project.address");
   private val store = HashMap[Key, Value]()
   //******* Handlers ******
-  net uponEvent {
-    case NetMessage(header, op: Op) => {
-      op match {
-        // Store value and respond
-        case PUT(key, value, id) =>
-          store.put(op.key, value);
-          trigger(
-            NetMessage(self, header.src, op.response(value, OpCode.Ok)) -> net
-          )
+  pLink uponEvent {
+    case PL_Deliver(src, op: Op) => {
+      log.info(s"KV-Store at $self got operation $op");
+      trigger(SC_Propose(ProposedOperation(src, op)) -> seqCons)
+    }
+  }
 
-        case GET(key, id) =>
-          store.get(op.key) match {
-            case Some(value) =>
-              trigger(NetMessage(self, header.src, op.response(value, OpCode.Ok)) -> net)
-            case None =>
-              trigger(NetMessage(self, header.src, op.response(OpCode.NotFound)) -> net)
+  seqCons uponEvent {
+    case SC_Decide(DecidedOperation(ProposedOperation(src, op), role: Role.Value)) => {
+      log.info(s"[$self] committing $op");
+      op match {
+        case PUT(key, value, id) => {
+          store.put(op.key, value);
+
+          if (role == Role.LEADER) {
+            trigger(
+              NetMessage(self, src, op.response(value, OpCode.Ok)) -> net
+            )
           }
-        case _ =>
-          trigger(NetMessage(self, header.src, op.response(OpCode.NotImplemented)) -> net);
+        }
+        case GET(key, id) =>
+          if (role == Role.LEADER) {
+            store.get(op.key) match {
+              case Some(value) => trigger(NetMessage(self, src, op.response(value, OpCode.Ok)) -> net)
+              case None =>
+                trigger(NetMessage(self, src, op.response(OpCode.NotFound)) -> net)
+            }
+          }
+        case _ => {
+          if (role == Role.LEADER) {
+            trigger(NetMessage(self, src, op.response(OpCode.NotImplemented)) -> net)
+          }
+        }
       }
     }
   }

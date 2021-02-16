@@ -18,7 +18,7 @@ class GossipLeaderElection(init: Init[GossipLeaderElection]) extends ComponentDe
     case Init(topology: Set[NetAddress] @unchecked) => topology
     case _                                          => Set.empty[NetAddress]
   }
-  val delta     = cfg.getValue[Long]("efpd.delay");
+  val delta     = cfg.getValue[Long]("id2203.project.epfd.delay");
   val ballotOne = 0x0100000000L
 
   //****** Subscriptions ******
@@ -26,15 +26,13 @@ class GossipLeaderElection(init: Init[GossipLeaderElection]) extends ComponentDe
   val pLink = requires[PerfectLinkPort];
   val ble   = provides[BallotLeaderElectionPort];
   //****** Variables ******
-  var round                      = 0;
-  var ballots                    = Map.empty[NetAddress, Long];
-  var leader: Option[NetAddress] = None;
+  var round                              = 0;
+  var ballots                            = Map.empty[NetAddress, Long];
+  var leader: Option[(Long, NetAddress)] = None;
 
   var ballot    = ballotFromNetworkAddress(0, self);
-  var delay     = delta;
+  var period    = delta;
   var maxBallot = ballot;
-
-  startTimer()
 
   def increment(ballot: Long): Long = {
     ballot + ballotOne;
@@ -48,7 +46,7 @@ class GossipLeaderElection(init: Init[GossipLeaderElection]) extends ComponentDe
     r
   }
 
-  def startTimer(): Unit = {
+  def startTimer(delay: Long): Unit = {
     val scheduledTimeout = new ScheduleTimeout(delay);
     scheduledTimeout.setTimeoutEvent(CheckTimeout(scheduledTimeout))
     trigger(scheduledTimeout -> timer)
@@ -56,17 +54,22 @@ class GossipLeaderElection(init: Init[GossipLeaderElection]) extends ComponentDe
 
   def checkLeader(): Unit = {
     val (topProcess, topBallot) = (ballots + (self -> ballot)).maxBy(_._2);
+    val top                     = (topBallot, topProcess);
     if (topBallot < maxBallot) {
       while (ballot <= maxBallot) {
         ballot = increment(ballot)
       }
       leader = None;
-    } else {
-      if (leader.isEmpty || topProcess != leader.get) {
-        maxBallot = topBallot;
-        leader = Some(topProcess);
-        trigger(BLE_Leader(topProcess, topBallot) -> ble)
-      }
+    } else if (leader.isEmpty || top != leader.get) {
+      maxBallot = topBallot;
+      leader = Some(top);
+      trigger(BLE_Leader(topProcess, topBallot) -> ble)
+    }
+  }
+
+  ctrl uponEvent {
+    case _: Start => {
+      startTimer(period)
     }
   }
 
@@ -80,7 +83,7 @@ class GossipLeaderElection(init: Init[GossipLeaderElection]) extends ComponentDe
       for (p <- topology) {
         trigger(PL_Send(p, HeartbeatRequest(round, maxBallot)) -> pLink);
       }
-      startTimer();
+      startTimer(period);
     }
   }
 
@@ -93,9 +96,9 @@ class GossipLeaderElection(init: Init[GossipLeaderElection]) extends ComponentDe
     }
     case PL_Deliver(src, HeartbeatReply(r, b)) => {
       if (r == round) {
-        ballots += (src -> r);
+        ballots += (src -> b);
       } else {
-        delay += delta;
+        period += delta;
       }
     }
   }
