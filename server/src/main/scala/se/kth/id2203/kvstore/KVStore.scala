@@ -49,14 +49,16 @@ class KVService extends ComponentDefinition {
   //******* Handlers ******
   pLink uponEvent {
     case PL_Deliver(src, op: Op) => {
-      log.info(s"KV-Store at $self got operation $op");
+      //log.info(s"KV-Store at $self got operation $op");
       trigger(SC_Propose(ProposedOperation(src, op)) -> seqCons)
     }
   }
 
   seqCons uponEvent {
     case SC_Decide(DecidedOperation(ProposedOperation(src, op), role: Role.Value)) => {
-      log.info(s"[$self] committing $op");
+      if (role == Role.LEADER) {
+        log.info(s"[$self] committing $op");
+      }
       op match {
         case PUT(key, value, id) => {
           store.put(op.key, value);

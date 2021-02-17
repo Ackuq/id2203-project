@@ -29,10 +29,12 @@ import se.sics.kompics.sl._;
 import se.sics.kompics.network.Network;
 import se.sics.kompics.timer.Timer;
 import util.Random;
-import se.kth.id2203.utils.{GROUP};
+import se.kth.id2203.utils.{Leader};
 import se.kth.id2203.protocols.perfect_link.{PL_Forward, PerfectLinkPort};
 import se.kth.id2203.protocols.perfect_link.PL_Send;
 import se.kth.id2203.protocols.beb.BestEffortBroadcastPort
+import scala.collection.mutable
+import se.kth.id2203.protocols.perfect_link.PL_Deliver
 
 /** The V(ery)S(imple)OverlayManager.
   * <p>
@@ -56,6 +58,7 @@ class VSOverlayManager extends ComponentDefinition {
   //******* Fields ******
   val self                             = cfg.getValue[NetAddress]("id2203.project.address");
   private var lut: Option[LookupTable] = None;
+  private val leaders                  = mutable.Map.empty[Int, NetAddress];
   //******* Handlers ******
   boot uponEvent {
     case GetInitialAssignments(nodes) => {
@@ -73,23 +76,25 @@ class VSOverlayManager extends ComponentDefinition {
     }
   }
 
-  net uponEvent {
-    case NetMessage(header, RouteMsg(key, msg)) => {
-      val nodes = lut.get.lookup(key).toSet;
-      assert(!nodes.isEmpty);
+  pLink uponEvent {
+    case PL_Deliver(src, Leader(leader, group)) => {
+      /* A leader has notified us about their leadership, neat */
+      leaders += (group -> leader);
+    }
+  }
 
-      if (nodes.contains(self)) {
-        /* Send message to group */
-        for (p <- nodes) {
-          trigger(PL_Forward(header.src, p, msg) -> pLink);
-        }
+  net uponEvent {
+    case NetMessage(header, x @ RouteMsg(key, msg)) => {
+      val groupIndex = lut.get.getPartitionIndex(key);
+
+      if (leaders(groupIndex).sameHostAs(self)) {
+        // I am the leader! Cool, lemme send this to my key-store
+        trigger(PL_Forward(header.src, self, msg) -> pLink);
       } else {
-        /* Forward to some member in the designated replication group
-          The receiving node will take care of the broadcast */
-        val i      = Random.nextInt(nodes.size);
-        val target = nodes.drop(i).head;
-        log.info(s"Forwarding message for key $key to $target");
-        trigger(NetMessage(header.src, target, msg) -> net);
+        // Forward to leader of the designated replication group
+        val leader = leaders(groupIndex);
+        log.info(s"Forwarding $msg to $leader");
+        trigger(NetMessage(header.src, leader, msg) -> net);
       }
 
     }

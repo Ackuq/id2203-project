@@ -5,20 +5,20 @@ import se.kth.id2203.networking.NetAddress
 import se.kth.id2203.protocols.perfect_link.{PL_Deliver, PL_Send, PerfectLinkPort}
 import scala.collection.mutable
 import se.kth.id2203.protocols.ble.{BLE_Leader, BallotLeaderElectionPort}
-import se.kth.id2203.kvstore.DecidedOperation
-
+import se.kth.id2203.kvstore.DecidedOperation;
+import se.kth.id2203.utils.{Leader};
 class SequencePaxos(init: Init[SequencePaxos]) extends ComponentDefinition {
   //********** Init **********
   import Role._;
   import State._;
 
   val self = cfg.getValue[NetAddress]("id2203.project.address");
-  val (pi, others) = init match {
-    case Init(topology: Set[NetAddress] @unchecked) => (topology, topology - self)
-    case _                                          => (Set(self), Set.empty[NetAddress])
+  val (pi, others, groupIndex) = init match {
+    case Init(topology: Set[NetAddress] @unchecked, groupIndex: Int) => (topology, topology - self, groupIndex)
+    case _                                                           => (Set(self), Set.empty[NetAddress], -1)
   }
-  val majority = ((pi.size + 1) / 2f).ceil.toInt;
-
+  val majority        = ((pi.size + 1) / 2f).ceil.toInt;
+  val bootstrapServer = cfg.getValue[NetAddress]("id2203.project.bootstrap-address");
   //********** Subscriptions **********
   val pLink = requires[PerfectLinkPort]
   val ble   = requires[BallotLeaderElectionPort];
@@ -49,6 +49,10 @@ class SequencePaxos(init: Init[SequencePaxos]) extends ComponentDefinition {
     s.take(l);
   }
 
+  def notifyLeadership(): Unit = {
+    trigger(PL_Send(bootstrapServer, Leader(self, groupIndex)) -> pLink);
+  }
+
   //********** Handlers **********
   ble uponEvent {
     case BLE_Leader(l, n) => {
@@ -57,7 +61,10 @@ class SequencePaxos(init: Init[SequencePaxos]) extends ComponentDefinition {
         leader = Some(l);
         nL = n;
         if (self == l && nL > nProm) {
+          log.info(s"[$self] declaring myself the leader")
           state = (LEADER, PREPARE);
+          /* Notify our leadership */
+          notifyLeadership();
           /* Clear everything */
           propCmds = List.empty;
           las.clear();
@@ -136,7 +143,7 @@ class SequencePaxos(init: Init[SequencePaxos]) extends ComponentDefinition {
     case PL_Deliver(_, Decide(l, nL)) => {
       if (nProm == nL) {
         while (ld < l) {
-          log.info(s"[$self] decided o value ${va(ld)}")
+          //log.info(s"[$self] decided value ${va(ld)}")
           trigger(SC_Decide(DecidedOperation(va(ld), state._1)) -> sc);
           ld += 1;
         }
@@ -160,10 +167,10 @@ class SequencePaxos(init: Init[SequencePaxos]) extends ComponentDefinition {
   sc uponEvent {
     case SC_Propose(c) => {
       if (state == (LEADER, PREPARE)) {
-        log.info(s"Leader received command: $c");
+        log.info(s"[$self] Leader received command: $c");
         propCmds = propCmds :+ c;
       } else if (state == (LEADER, ACCEPT)) {
-        log.info(s"Leader accepts command: $c");
+        log.info(s"[$self] Leader accepts command: $c");
         va = va :+ c;
         las(self) = las(self) + 1;
         others

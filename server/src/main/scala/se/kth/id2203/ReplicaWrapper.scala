@@ -15,8 +15,10 @@ import se.sics.kompics.timer.Timer
 import se.kth.id2203.protocols.sequence_consencus.SequencePaxos
 import se.kth.id2203.protocols.ble.BallotLeaderElectionPort
 import se.kth.id2203.protocols.sequence_consencus.SequenceConsensusPort
+import se.kth.id2203.networking.NetAddress
 
 class ReplicaWrapper extends ComponentDefinition {
+  val self  = cfg.getValue[NetAddress]("id2203.project.address");
   val boot  = requires(Bootstrapping);
   val pLink = requires[PerfectLinkPort];
   val net   = requires[Network];
@@ -26,31 +28,37 @@ class ReplicaWrapper extends ComponentDefinition {
 
   boot uponEvent {
     case Booted(assignment: LookupTable) => {
-      val topology = assignment.getNodes();
+      try {
+        val (key, partition) = assignment.getPartition(self);
 
-      val beb     = create(classOf[BestEffortBroadcast], Init[BestEffortBroadcast](topology));
-      val ble     = create(classOf[GossipLeaderElection], Init[GossipLeaderElection](topology));
-      val seqCons = create(classOf[SequencePaxos], Init[SequencePaxos](topology));
+        val beb     = create(classOf[BestEffortBroadcast], Init[BestEffortBroadcast](partition.toSet));
+        val ble     = create(classOf[GossipLeaderElection], Init[GossipLeaderElection](partition.toSet));
+        val seqCons = create(classOf[SequencePaxos], Init[SequencePaxos](partition.toSet, key));
 
-      trigger(new Start() -> beb.control());
-      trigger(new Start() -> ble.control());
-      trigger(new Start() -> seqCons.control());
+        trigger(new Start() -> beb.control());
+        trigger(new Start() -> ble.control());
+        trigger(new Start() -> seqCons.control());
 
-      // Best Effort Broadcast
-      connect[PerfectLinkPort](pLink -> beb);
+        // Best Effort Broadcast
+        connect[PerfectLinkPort](pLink -> beb);
 
-      // (Gossip) Ballot Leader Election
-      connect[PerfectLinkPort](pLink -> ble);
-      connect[Timer](timer           -> ble);
+        // (Gossip) Ballot Leader Election
+        connect[PerfectLinkPort](pLink -> ble);
+        connect[Timer](timer           -> ble);
 
-      // Sequence Paxos
-      connect[PerfectLinkPort](pLink        -> seqCons);
-      connect[BallotLeaderElectionPort](ble -> seqCons)
+        // Sequence Paxos
+        connect[PerfectLinkPort](pLink        -> seqCons);
+        connect[BallotLeaderElectionPort](ble -> seqCons)
 
-      // KV
-      connect[Network](net                   -> kv);
-      connect[PerfectLinkPort](pLink         -> kv);
-      connect[SequenceConsensusPort](seqCons -> kv);
+        // KV
+        connect[Network](net                   -> kv);
+        connect[PerfectLinkPort](pLink         -> kv);
+        connect[SequenceConsensusPort](seqCons -> kv);
+      } catch {
+        case e: IllegalArgumentException => {
+          log.warn(s"Got message whe starting KV-Store: ${e.getMessage()}")
+        }
+      }
     }
   }
 }

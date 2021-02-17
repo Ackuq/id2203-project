@@ -43,25 +43,35 @@ class LookupTable(val replicationDegree: Int, val keyRange: Int) extends NodeAss
     * @return An iterable of nodes (addresses)
     */
   def lookup(key: String): Iterable[NetAddress] = {
-    val keyHash = key.hashCode() % (keyRange * partitions.size);
-
-    /* Calculate which partition this key belongs to */
-    val partition = (keyHash.toFloat / (keyRange + 1)).floor.toInt;
-
-    return partitions(partition);
+    return partitions(getPartitionIndex(key));
   }
 
-  def getGroup(address: NetAddress): Set[NetAddress] = {
-    for (partition <- partitions) {
-      if (partition._2.exists(a => a.sameHostAs(address))) {
-        return partition._2.toSet;
+  /** Get the partition index of a key
+    * @param key The key we are interested in
+    * @return The index of the concerned group
+    */
+  def getPartitionIndex(key: String): Int = {
+    val keyHash = key.hashCode() % (keyRange * partitions.size);
+    return (keyHash.toFloat / (keyRange + 1)).floor.toInt;
+  }
+
+  /** Get the partition for an address
+    * @param address The address we are interested in
+    * @return A tuple (index, partition), where the partition is an iterable of nodes
+    */
+  def getPartition(address: NetAddress): (Int, Iterable[NetAddress]) = {
+    for ((key, partition) <- partitions) {
+      if (partition.exists(a => a.sameHostAs(address))) {
+        return (key, partition);
       }
     }
     throw new IllegalArgumentException("Woops, you're not in a group, something went wrong...");
   }
 
-  def getNodes(): Set[NetAddress] = partitions.foldLeft(Set.empty[NetAddress]) { case (acc, kv) =>
-    acc ++ kv._2
+  def getNodes(): Set[NetAddress] = {
+    partitions.foldLeft(Set.empty[NetAddress]) { case (acc, kv) =>
+      acc ++ kv._2
+    }
   }
 
   override def toString(): String = {
@@ -85,16 +95,18 @@ object LookupTable {
   def generate(nodes: Set[NetAddress], replicationDegree: Int, keyRange: Int): LookupTable = {
     val lut           = new LookupTable(replicationDegree, keyRange);
     val partitionSize = lut.replicationDegree + 1
-    /* If we can fit all of the partition */
+
     var partition = 0
 
     /* Divide into partitions and add the partitions to the table */
     nodes
+      .dropRight(nodes.size % replicationDegree)
       .sliding(partitionSize, partitionSize)
       .foreach(group => {
         lut.partitions ++= (partition -> group);
-        partition += lut.keyRange;
+        partition += 1;
       })
+
     println(s"Created ${lut.partitions.size} partitions");
     lut
   }

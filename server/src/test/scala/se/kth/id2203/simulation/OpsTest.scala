@@ -62,7 +62,7 @@ class OpsTest extends AnyFlatSpec with Matchers {
   "Simple Operations" should "be implemented" in {
     val seed = 123L;
     JSimulationScenario.setSeed(seed);
-    val simpleBootScenario = SimpleScenario.scenario(3);
+    val simpleBootScenario = SimpleScenario.scenario(6);
     val res                = SimulationResultSingleton.getInstance();
     SimulationResult += ("messages" -> nMessages);
     simpleBootScenario.simulate(classOf[LauncherComp]);

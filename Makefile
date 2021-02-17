@@ -21,7 +21,7 @@ compile-client:
 
 ### Server ###
 
-CLUSTER_SIZE?=3
+CLUSTER_SIZE?=6
 
 server: compile-server assemble-server run-server
 
