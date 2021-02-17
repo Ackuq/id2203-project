@@ -87,4 +87,24 @@ class ClientConsole(val service: ClientService) extends CommandConsole with Pars
       out.println(s"GET sent! Awaiting response...");
       onSent(fr);
     }
+
+  val casParser = new ParsingObject[(String, String, String)] {
+    override def parseOperation[_: P]: P[(String, String, String)] = P(
+      ("CAS" | "cas") ~ " " ~ simpleStr.! ~ " " ~ simpleStr.! ~ " " ~ simpleStr.!
+    );
+  }
+
+  val casCommand =
+    parsed(
+      casParser,
+      usage = "CAS <key> <oldValue> <newValue>",
+      descr = "Executes a CAS for <key> and swaps stored value to <newValue> if the stored value equals <oldValue>."
+    ) { case (key, oldValue, newValue) =>
+      println(s"CAS with key $key, reference value $oldValue and swap value $newValue");
+
+      val fr = service.cas(key, oldValue, newValue);
+      out.print("CAS sent! Awaiting response...");
+      onSent(fr);
+    }
+
 }

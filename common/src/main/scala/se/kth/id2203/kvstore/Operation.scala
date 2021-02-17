@@ -42,10 +42,14 @@ case class PUT(key: String, value: String, id: UUID = UUID.randomUUID()) extends
 @SerialVersionUID(-5302359464069541373L)
 case class GET(key: String, id: UUID = UUID.randomUUID()) extends Op;
 
+@SerialVersionUID(-5402663881331978439L)
+case class CAS(key: String, oldValue: String, newValue: String, id: UUID = UUID.randomUUID()) extends Op;
+
 object OpCode {
   sealed trait OpCode;
   case object Ok             extends OpCode;
   case object BadRequest     extends OpCode;
+  case object NotModified    extends OpCode;
   case object NotFound       extends OpCode;
   case object NotImplemented extends OpCode;
 }

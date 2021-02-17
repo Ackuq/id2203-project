@@ -68,11 +68,19 @@ class OpsTest extends AnyFlatSpec with Matchers {
     simpleBootScenario.simulate(classOf[LauncherComp]);
     for (i <- 0 to nMessages) {
       // PUTs
-      SimulationResult.get[String](s"put$i.put") should be(Some(s"value$i"));
+      SimulationResult.get[String](s"key$i.put") should be(Some(s"value$i"));
     }
     for (i <- 0 to nMessages) {
       // GETs
-      SimulationResult.get[String](s"put$i.get") should be(Some(s"value$i"));
+      SimulationResult.get[String](s"key$i.get") should be(Some(s"value$i"));
+    }
+    for (i <- 0 to nMessages) {
+      // Failing CASs, should remain same
+      SimulationResult.get[String](s"key$i.cas_1") should be(Some(s"value$i"));
+    }
+    for (i <- 0 to nMessages) {
+      // Correct CAS, value should be changed to newValue$i
+      SimulationResult.get[String](s"key$i.cas_2") should be(Some(s"newValue$i"));
     }
   }
 

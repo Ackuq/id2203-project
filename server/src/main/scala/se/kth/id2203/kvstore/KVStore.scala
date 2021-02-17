@@ -61,7 +61,7 @@ class KVService extends ComponentDefinition {
       }
       op match {
         case PUT(key, value, id) => {
-          store.put(op.key, value);
+          store.put(key, value);
 
           if (role == Role.LEADER) {
             trigger(
@@ -71,12 +71,32 @@ class KVService extends ComponentDefinition {
         }
         case GET(key, id) =>
           if (role == Role.LEADER) {
-            store.get(op.key) match {
+            store.get(key) match {
               case Some(value) => trigger(NetMessage(self, src, op.response(value, OpCode.Ok)) -> net)
               case None =>
                 trigger(NetMessage(self, src, op.response(OpCode.NotFound)) -> net)
             }
           }
+        case CAS(key, oldValue, newValue, id) => {
+          store.get(key) match {
+            case Some(value) => {
+              if (value == oldValue) {
+                store.put(key, newValue)
+                if (role == Role.LEADER) {
+                  trigger(NetMessage(self, src, op.response(newValue, OpCode.Ok)) -> net)
+
+                }
+              } else if (role == Role.LEADER) {
+                trigger(NetMessage(self, src, op.response(value, OpCode.NotModified)) -> net)
+              }
+            }
+            case None => {
+              if (role == Role.LEADER) {
+                trigger(NetMessage(self, src, op.response(OpCode.NotFound)) -> net)
+              }
+            }
+          }
+        }
         case _ => {
           if (role == Role.LEADER) {
             trigger(NetMessage(self, src, op.response(OpCode.NotImplemented)) -> net)

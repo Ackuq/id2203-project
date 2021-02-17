@@ -48,7 +48,7 @@ class ScenarioClient extends ComponentDefinition {
     case _: Start => {
       val messages = SimulationResult[Int]("messages");
       for (i <- 0 to messages) {
-        val op  = new PUT(s"put$i", s"value$i");
+        val op  = new PUT(s"key$i", s"value$i");
         val key = s"${op.key}.put"
         val routeMsg =
           RouteMsg(op.key, op); // don't know which partition is responsible, so ask the bootstrap server to forward it
@@ -58,12 +58,32 @@ class ScenarioClient extends ComponentDefinition {
         SimulationResult += (key -> "Sent");
       }
       for (i <- 0 to messages) {
-        val op  = new GET(s"put$i");
+        val op  = new GET(s"key$i");
         val key = s"${op.key}.get"
         val routeMsg =
           RouteMsg(op.key, op); // don't know which partition is responsible, so ask the bootstrap server to forward it
         trigger(NetMessage(self, server, routeMsg) -> net);
         pending += (op.id                          -> key);
+        logger.info("Sending {}", op);
+        SimulationResult += (key -> "Sent");
+      }
+      // Test CAS with wrong reference
+      for (i <- 0 to messages) {
+        val op       = new CAS(s"key$i", s"notSameValue$i", s"willNotSucceed$i");
+        val key      = s"${op.key}.cas_1";
+        val routeMsg = RouteMsg(op.key, op);
+        trigger(NetMessage(self, server, routeMsg) -> net);
+        pending += (op.id                          -> key)
+        logger.info("Sending {}", op);
+        SimulationResult += (key -> "Sent");
+      }
+      // Test CAS with correct reference
+      for (i <- 0 to messages) {
+        val op       = new CAS(s"key$i", s"value$i", s"newValue$i");
+        val key      = s"${op.key}.cas_2";
+        val routeMsg = RouteMsg(op.key, op);
+        trigger(NetMessage(self, server, routeMsg) -> net);
+        pending += (op.id                          -> key)
         logger.info("Sending {}", op);
         SimulationResult += (key -> "Sent");
       }
