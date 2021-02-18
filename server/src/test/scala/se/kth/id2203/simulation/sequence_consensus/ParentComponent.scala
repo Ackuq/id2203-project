@@ -34,7 +34,6 @@ import se.sics.kompics.timer.Timer;
 
 /** Custom Protocol */
 import se.kth.id2203.protocols.perfect_link.{PerfectLink, PerfectLinkPort};
-import se.kth.id2203.protocols.beb.{BestEffortBroadcast, BestEffortBroadcastPort};
 
 class ParentComponent extends ComponentDefinition {
 

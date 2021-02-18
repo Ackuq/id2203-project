@@ -1,7 +1,6 @@
 package se.kth.id2203.simulation.sequence_consensus;
 
 import se.sics.kompics.sl._;
-import se.kth.id2203.protocols.beb.BestEffortBroadcast;
 import se.kth.id2203.protocols.perfect_link.PerfectLinkPort;
 
 import se.kth.id2203.kvstore.KVService;
@@ -31,18 +30,13 @@ class ReplicaWrapper extends ComponentDefinition {
       try {
         val (key, partition) = assignment.getPartition(self);
 
-        val beb            = create(classOf[BestEffortBroadcast], Init[BestEffortBroadcast](partition.toSet));
         val ble            = create(classOf[GossipLeaderElection], Init[GossipLeaderElection](partition.toSet));
         val seqCons        = create(classOf[SequencePaxos], Init[SequencePaxos](partition.toSet, key));
         val scenarioServer = create(classOf[ScenarioServer], Init[ScenarioServer](key));
 
-        trigger(new Start() -> beb.control());
         trigger(new Start() -> ble.control());
         trigger(new Start() -> seqCons.control());
         trigger(new Start() -> scenarioServer.control());
-
-        // Best Effort Broadcast
-        connect[PerfectLinkPort](pLink -> beb);
 
         // (Gossip) Ballot Leader Election
         connect[PerfectLinkPort](pLink -> ble);

@@ -30,11 +30,8 @@ import se.sics.kompics.network.Network;
 import se.sics.kompics.timer.Timer;
 import util.Random;
 import se.kth.id2203.utils.{Leader};
-import se.kth.id2203.protocols.perfect_link.{PL_Forward, PerfectLinkPort};
-import se.kth.id2203.protocols.perfect_link.PL_Send;
-import se.kth.id2203.protocols.beb.BestEffortBroadcastPort
+import se.kth.id2203.protocols.perfect_link.{PL_Deliver, PL_Forward, PerfectLinkPort};
 import scala.collection.mutable
-import se.kth.id2203.protocols.perfect_link.PL_Deliver
 
 /** The V(ery)S(imple)OverlayManager.
   * <p>
