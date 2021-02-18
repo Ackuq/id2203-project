@@ -2,6 +2,7 @@ package se.kth.id2203.simulation
 
 import org.scalatest.flatspec.AnyFlatSpec;
 import org.scalatest.matchers.must.Matchers
+import org.scalatest.BeforeAndAfter
 import java.net.{InetAddress, UnknownHostException};
 import se.sics.kompics.network.Address
 import se.sics.kompics.sl._;
@@ -15,22 +16,24 @@ import se.kth.id2203.networking.NetAddress
 import se.kth.id2203.simulation.sequence_consensus.{ParentComponent => ScenarioServer};
 import scala.collection.mutable
 
-class SequenceConsensusTest extends AnyFlatSpec with Matchers {
+class SequenceConsensusTest extends AnyFlatSpec with Matchers with BeforeAndAfter {
   // Use 6 servers
   private val nServers  = 6;
   private val nMessages = 10;
 
-  /* Validity:
-      - If process p decides v then v is a sequence of proposed commands (without duplicates)
-   */
-  "Decided values" must "be non-duplicate proposed commands (Validity)" in {
+  before {
     val seed = 123L;
     JSimulationScenario.setSeed(seed);
     val simpleBootScenario = SimpleSequenceConsensusScenario.scenario(nServers);
     val res                = SimulationResultSingleton.getInstance();
     SimulationResult += ("messages" -> nMessages);
     simpleBootScenario.simulate(classOf[LauncherComp]);
+  }
 
+  /* Validity:
+      - If process p decides v then v is a sequence of proposed commands (without duplicates)
+   */
+  "Decided values" must "be non-duplicate proposed commands (Validity)" in {
     var proposals  = List.empty[String];
     var allDecided = List.empty[String];
 
@@ -61,13 +64,6 @@ class SequenceConsensusTest extends AnyFlatSpec with Matchers {
       - If process p decides u and process q decides v then one is a prefix of the other
    */
   "Decided values" must "not diverge (Uniform Agreement)" in {
-    val seed = 123L;
-    JSimulationScenario.setSeed(seed);
-    val simpleBootScenario = SimpleSequenceConsensusScenario.scenario(nServers);
-    val res                = SimulationResultSingleton.getInstance();
-    SimulationResult += ("messages" -> nMessages);
-    simpleBootScenario.simulate(classOf[LauncherComp]);
-
     var decidedMap = mutable.Map.empty[Int, Map[String, List[String]]];
 
     for (s <- 1 to nServers) {
@@ -108,13 +104,6 @@ class SequenceConsensusTest extends AnyFlatSpec with Matchers {
     *  - If command C is proposed by a correct process then eventually every correct process decides a sequence containing C
     */
   "If a command is proposed then it" must "eventually be decided on in every correct process (Termination)" in {
-    val seed = 123L;
-    JSimulationScenario.setSeed(seed);
-    val simpleBootScenario = SimpleSequenceConsensusScenario.scenario(nServers);
-    val res                = SimulationResultSingleton.getInstance();
-    SimulationResult += ("messages" -> nMessages);
-    simpleBootScenario.simulate(classOf[LauncherComp]);
-
     var allProposals = List.empty[String];
     var allDecision  = List.empty[String];
 

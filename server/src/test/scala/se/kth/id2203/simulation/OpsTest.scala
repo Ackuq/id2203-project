@@ -42,23 +42,6 @@ class OpsTest extends AnyFlatSpec with Matchers {
 
   private val nMessages = 10;
 
-  //  "Classloader" should "be something" in {
-  //    val cname = classOf[SimulationResultSingleton].getCanonicalName();
-  //    var cl = classOf[SimulationResultSingleton].getClassLoader;
-  //    var i = 0;
-  //    while (cl != null) {
-  //      val res = try {
-  //        val c = cl.loadClass(cname);
-  //        true
-  //      } catch {
-  //        case t: Throwable => false
-  //      }
-  //      println(s"$i -> ${cl.getClass.getName} has class? $res");
-  //      cl = cl.getParent();
-  //      i -= 1;
-  //    }
-  //  }
-
   "Simple Operations" should "be implemented" in {
     val seed = 123L;
     JSimulationScenario.setSeed(seed);
@@ -66,6 +49,7 @@ class OpsTest extends AnyFlatSpec with Matchers {
     val res                = SimulationResultSingleton.getInstance();
     SimulationResult += ("messages" -> nMessages);
     simpleBootScenario.simulate(classOf[LauncherComp]);
+
     for (i <- 0 to nMessages) {
       // PUTs
       SimulationResult.get[String](s"key$i.put") should be(Some(s"value$i"));
