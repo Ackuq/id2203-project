@@ -13,11 +13,16 @@ import scala.collection.mutable;
 import se.kth.id2203.networking.NetMessage;
 import se.kth.id2203.protocols.sequence_consencus.{SC_Decide, SC_Propose, SequenceConsensusPort};
 
-class ScenarioServer extends ComponentDefinition {
+class ScenarioServer(init: Init[ScenarioServer]) extends ComponentDefinition {
   //******* Ports ******
-  private val seqCons = requires[SequenceConsensusPort]
+  private val seqCons        = requires[SequenceConsensusPort]
+  private val seqConsForward = provides[SequenceConsensusPort];
   //******* Fields ******
-  private val self   = cfg.getValue[NetAddress]("id2203.project.address");
+  private val partition = init match {
+    case Init(partition: Int) => partition
+    case _                    => 0
+  }
+  private val self   = cfg.getValue[NetAddress]("id2203.project.address").getIp().getHostAddress();
   private val server = cfg.getValue[NetAddress]("id2203.project.bootstrap-address");
 
   private var numDecided  = 0;
@@ -35,12 +40,24 @@ class ScenarioServer extends ComponentDefinition {
     SimulationResult += (s"$self.numProposed" -> numProposed);
   }
 
+  //******* Handlers ******
+
+  ctrl uponEvent {
+    case _: Start => {
+      SimulationResult += (s"$self.partition" -> partition)
+    }
+  }
+
   seqCons uponEvent {
     case SC_Decide(DecidedOperation(cmd, _)) => {
       decided(cmd.toString());
     }
-    case SC_Propose(cmd) => {
+  }
+
+  seqConsForward uponEvent {
+    case x @ SC_Propose(cmd) => {
       proposed(cmd.toString());
+      trigger(x -> seqCons)
     }
   }
 }

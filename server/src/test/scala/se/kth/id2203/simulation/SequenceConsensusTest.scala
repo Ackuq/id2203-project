@@ -13,6 +13,7 @@ import se.sics.kompics.simulator.network.impl.NetworkModels
 import scala.concurrent.duration._
 import se.kth.id2203.networking.NetAddress
 import se.kth.id2203.simulation.sequence_consensus.{ParentComponent => ScenarioServer};
+import scala.collection.mutable
 
 class SequenceConsensusTest extends AnyFlatSpec with Matchers {
   // Use 6 servers
@@ -30,13 +31,14 @@ class SequenceConsensusTest extends AnyFlatSpec with Matchers {
     SimulationResult += ("messages" -> nMessages);
     simpleBootScenario.simulate(classOf[LauncherComp]);
 
-    var proposals = List.empty[String];
-    var decided   = List.empty[String];
+    var proposals  = List.empty[String];
+    var allDecided = List.empty[String];
 
     for (s <- 1 to nServers) {
       val address     = SimpleSequenceConsensusScenario.serverBase + s;
       val numProposed = SimulationResult.get[Int](s"$address.numProposed").getOrElse(0);
       val numDecided  = SimulationResult.get[Int](s"$address.numDecided").getOrElse(0);
+      var decided     = List.empty[String];
 
       for (i <- 0 to numProposed - 1) {
         proposals = proposals :+ SimulationResult.get[String](s"$address.proposed.$i").get;
@@ -45,9 +47,13 @@ class SequenceConsensusTest extends AnyFlatSpec with Matchers {
       for (i <- 0 to numDecided - 1) {
         decided = decided :+ SimulationResult.get[String](s"$address.decided.$i").get;
       }
+      // Check for duplicates
+      decided.size must be(decided.distinct.size)
     }
-    for (decision <- decided) {
-      proposals.contains(decision) must be(true)
+
+    // Check that all decisions are proposals
+    for (decision <- allDecided) {
+      proposals.contains(decision) must be(true);
     }
   }
 
@@ -62,25 +68,36 @@ class SequenceConsensusTest extends AnyFlatSpec with Matchers {
     SimulationResult += ("messages" -> nMessages);
     simpleBootScenario.simulate(classOf[LauncherComp]);
 
-    var decidedMap = Map.empty[String, List[String]];
+    var decidedMap = mutable.Map.empty[Int, Map[String, List[String]]];
 
     for (s <- 1 to nServers) {
       val address    = SimpleSequenceConsensusScenario.serverBase + s;
+      val partition  = SimulationResult.get[Int](s"$address.partition").get
       val numDecided = SimulationResult.get[Int](s"$address.numDecided").getOrElse(0);
       var decided    = List.empty[String];
+
+      if (!decidedMap.contains(partition)) {
+        decidedMap(partition) = Map.empty;
+      }
+
       for (i <- 0 to numDecided - 1) {
         decided = decided :+ SimulationResult.get[String](s"$address.decided.$i").get;
       }
 
-      decidedMap = decidedMap + (address -> decided);
+      decidedMap(partition) = decidedMap(partition) + (address -> decided);
     }
 
     // Check that all servers has decided commands in same order
-    for ((address, decided) <- decidedMap) {
-      for ((otherAddress, otherDecided) <- decidedMap) {
-        if (address != otherAddress) {
-          for (i <- 0 to Math.min(decided.size, otherDecided.size) - 1) {
-            decided(i) must be(otherDecided(i))
+    for (partition <- decidedMap.keys) {
+      // Check against all different nodes within same partition
+      for ((address, decided) <- decidedMap(partition)) {
+        for ((otherAddress, otherDecided) <- decidedMap(partition)) {
+          // Skip checking self
+          if (address != otherAddress) {
+            // They should both have the same length, but we'll use Math.min in case of prefixes
+            for (i <- 0 to Math.min(decided.size, otherDecided.size) - 1) {
+              decided(i) must be(otherDecided(i))
+            }
           }
         }
       }
@@ -98,8 +115,8 @@ class SequenceConsensusTest extends AnyFlatSpec with Matchers {
     SimulationResult += ("messages" -> nMessages);
     simpleBootScenario.simulate(classOf[LauncherComp]);
 
-    var proposals  = List.empty[String];
-    var decidedMap = Map.empty[String, List[String]];
+    var allProposals = List.empty[String];
+    var allDecision  = List.empty[String];
 
     for (s <- 1 to nServers) {
       val address     = SimpleSequenceConsensusScenario.serverBase + s;
@@ -109,20 +126,19 @@ class SequenceConsensusTest extends AnyFlatSpec with Matchers {
       var decided = List.empty[String];
 
       for (i <- 0 to numProposed - 1) {
-        proposals = proposals :+ SimulationResult.get[String](s"$address.proposed.$i").get;
+        val proposal = SimulationResult.get[String](s"$address.proposed.$i").get;
+        allProposals = allProposals :+ proposal;
       }
 
       for (i <- 0 to numDecided - 1) {
-        decided = decided :+ SimulationResult.get[String](s"$address.decided.$i").get;
+        val decision = SimulationResult.get[String](s"$address.decided.$i").get;
+        allDecision = allDecision :+ decision;
       }
-
-      decidedMap = decidedMap + (address -> decided);
     }
 
-    for (proposal <- proposals) {
-      for ((_, decided) <- decidedMap) {
-        decided.contains(proposal) must be(true);
-      }
+    // All proposals should be decided by some node
+    for (proposal <- allProposals) {
+      allDecision.contains(proposal) must be(true)
     }
   }
 }

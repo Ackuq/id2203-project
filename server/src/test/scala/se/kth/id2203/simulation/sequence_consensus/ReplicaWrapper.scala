@@ -34,7 +34,7 @@ class ReplicaWrapper extends ComponentDefinition {
         val beb            = create(classOf[BestEffortBroadcast], Init[BestEffortBroadcast](partition.toSet));
         val ble            = create(classOf[GossipLeaderElection], Init[GossipLeaderElection](partition.toSet));
         val seqCons        = create(classOf[SequencePaxos], Init[SequencePaxos](partition.toSet, key));
-        val scenarioServer = create(classOf[ScenarioServer], Init.NONE);
+        val scenarioServer = create(classOf[ScenarioServer], Init[ScenarioServer](key));
 
         trigger(new Start() -> beb.control());
         trigger(new Start() -> ble.control());
@@ -52,13 +52,13 @@ class ReplicaWrapper extends ComponentDefinition {
         connect[PerfectLinkPort](pLink        -> seqCons);
         connect[BallotLeaderElectionPort](ble -> seqCons)
 
-        // KV
-        connect[Network](net                   -> kv);
-        connect[PerfectLinkPort](pLink         -> kv);
-        connect[SequenceConsensusPort](seqCons -> kv);
-
         // Scenario client
         connect[SequenceConsensusPort](seqCons -> scenarioServer);
+
+        // KV
+        connect[Network](net                          -> kv);
+        connect[PerfectLinkPort](pLink                -> kv);
+        connect[SequenceConsensusPort](scenarioServer -> kv);
 
       } catch {
         case e: IllegalArgumentException => {

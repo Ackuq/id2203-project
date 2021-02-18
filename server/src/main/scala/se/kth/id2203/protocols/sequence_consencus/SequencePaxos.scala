@@ -3,7 +3,6 @@ package se.kth.id2203.protocols.sequence_consencus;
 import se.sics.kompics.sl._;
 import se.kth.id2203.networking.NetAddress
 import se.kth.id2203.protocols.perfect_link.{PL_Deliver, PL_Send, PerfectLinkPort}
-import scala.collection.mutable
 import se.kth.id2203.protocols.ble.{BLE_Leader, BallotLeaderElectionPort}
 import se.kth.id2203.kvstore.DecidedOperation;
 import se.kth.id2203.utils.{Leader};
@@ -35,10 +34,10 @@ class SequencePaxos(init: Init[SequencePaxos]) extends ComponentDefinition {
 
   //********** Leader state **********
   var propCmds = List.empty[RSM_Command];
-  val las      = mutable.Map.empty[NetAddress, Int];
-  val lds      = mutable.Map.empty[NetAddress, Int];
+  var las      = Map.empty[NetAddress, Int];
+  var lds      = Map.empty[NetAddress, Int];
   var lc       = 0;
-  val acks     = mutable.Map.empty[NetAddress, (Long, List[RSM_Command])];
+  var acks     = Map.empty[NetAddress, (Long, List[RSM_Command])];
 
   //********** Helpers **********
   def suffix(s: List[RSM_Command], l: Int): List[RSM_Command] = {
@@ -67,17 +66,17 @@ class SequencePaxos(init: Init[SequencePaxos]) extends ComponentDefinition {
           notifyLeadership();
           /* Clear everything */
           propCmds = List.empty;
-          las.clear();
-          lds.clear();
-          acks.clear();
+          las = Map.empty;
+          lds = Map.empty;
+          acks = Map.empty;
           lc = 0;
 
           for (p <- others) {
             trigger(PL_Send(p, Prepare(nL, ld, na)) -> pLink);
           }
           /* Set our new state */
-          acks += (l   -> (na, suffix(va, ld)));
-          lds += (self -> ld);
+          acks = acks + (l -> (na, suffix(va, ld)));
+          lds += (self     -> ld);
           nProm = nL;
         }
       } else {
@@ -172,7 +171,7 @@ class SequencePaxos(init: Init[SequencePaxos]) extends ComponentDefinition {
       } else if (state == (LEADER, ACCEPT)) {
         log.info(s"[$self] Leader accepts command: $c");
         va = va :+ c;
-        las(self) = las(self) + 1;
+        las = las + (self -> (las(self) + 1));
         others
           .filter(lds.contains(_))
           .foreach(p => {
