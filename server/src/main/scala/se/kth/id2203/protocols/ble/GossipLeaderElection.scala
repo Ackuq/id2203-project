@@ -13,24 +13,24 @@ import se.kth.id2203.protocols.perfect_link.PL_Deliver
   */
 class GossipLeaderElection(init: Init[GossipLeaderElection]) extends ComponentDefinition {
   //****** Init ******
-  val self = cfg.getValue[NetAddress]("id2203.project.address");
-  val topology = init match {
+  val self: NetAddress = cfg.getValue[NetAddress]("id2203.project.address");
+  val topology: Set[NetAddress] = init match {
     case Init(topology: Set[NetAddress] @unchecked) => topology
     case _                                          => Set.empty[NetAddress]
   }
-  val delta     = cfg.getValue[Long]("id2203.project.epfd.delay");
+  val delta: Long     = cfg.getValue[Long]("id2203.project.epfd.delay");
   val ballotOne = 0x0100000000L
 
   //****** Subscriptions ******
-  val timer = requires[Timer];
-  val pLink = requires[PerfectLinkPort];
-  val ble   = provides[BallotLeaderElectionPort];
+  val timer: PositivePort[Timer] = requires[Timer];
+  val pLink: PositivePort[PerfectLinkPort] = requires[PerfectLinkPort];
+  val ble: NegativePort[BallotLeaderElectionPort]   = provides[BallotLeaderElectionPort];
   //****** Variables ******
   var round                              = 0;
-  var ballots                            = Map.empty[NetAddress, Long];
+  var ballots: Map[NetAddress,Long]                            = Map.empty[NetAddress, Long];
   var leader: Option[(Long, NetAddress)] = None;
 
-  var ballot    = ballotFromNetworkAddress(0, self);
+  var ballot: Long    = ballotFromNetworkAddress(0, self);
   var period    = delta;
   var maxBallot = ballot;
 

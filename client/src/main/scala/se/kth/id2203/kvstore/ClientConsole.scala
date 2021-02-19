@@ -32,10 +32,10 @@ import concurrent.{Await, Future => ScalaFuture}
 import concurrent.duration._
 
 object ClientConsole {
-  def lowercase[_: P] = P(CharIn("a-z"))
-  def uppercase[_: P] = P(CharIn("A-Z"))
-  def digit[_: P]     = P(CharIn("0-9"))
-  def simpleStr[_: P] = P(lowercase | uppercase | digit)
+  def lowercase[_: P]: P[Unit] = P(CharIn("a-z"))
+  def uppercase[_: P]: P[Unit] = P(CharIn("A-Z"))
+  def digit[_: P]: P[Unit]     = P(CharIn("0-9"))
+  def simpleStr[_: P]: P[Unit] = P(lowercase | uppercase | digit)
   val colouredLayout  = new ColoredPatternLayout("%d{[HH:mm:ss,SSS]} %-5p {%c{1}} %m%n");
 }
 
@@ -60,11 +60,11 @@ class ClientConsole(val service: ClientService) extends CommandConsole with Pars
     }
   }
 
-  val putParser = new ParsingObject[(String, String)] {
+  val putParser: ParsingObject[(String, String)] = new ParsingObject[(String, String)] {
     override def parseOperation[_: P]: P[(String, String)] = P(("PUT" | "put") ~ " " ~ simpleStr.! ~ " " ~ simpleStr.!);
   }
 
-  val putCommand =
+  val putCommand: ParsedCommand[(String, String)] =
     parsed(putParser, usage = "PUT <key> <value>", descr = "Executes a PUT for <key> with value <value>.") {
       case (key, value) =>
         println(s"PUT with key $key and value $value");
@@ -74,11 +74,11 @@ class ClientConsole(val service: ClientService) extends CommandConsole with Pars
         onSent(fr);
     }
 
-  val getParser = new ParsingObject[String] {
+  val getParser: ParsingObject[String] = new ParsingObject[String] {
     override def parseOperation[_: P]: P[String] = P(("GET" | "get") ~ " " ~ simpleStr.!);
   }
 
-  val getCommand =
+  val getCommand: ParsedCommand[String] =
     parsed(getParser, usage = "GET <key>", descr = "Executes a GET for <key>.") { case key =>
       println(s"GET with key $key");
 
@@ -87,13 +87,13 @@ class ClientConsole(val service: ClientService) extends CommandConsole with Pars
       onSent(fr);
     }
 
-  val casParser = new ParsingObject[(String, String, String)] {
+  val casParser: ParsingObject[(String, String, String)] = new ParsingObject[(String, String, String)] {
     override def parseOperation[_: P]: P[(String, String, String)] = P(
       ("CAS" | "cas") ~ " " ~ simpleStr.! ~ " " ~ simpleStr.! ~ " " ~ simpleStr.!
     );
   }
 
-  val casCommand =
+  val casCommand: ParsedCommand[(String, String, String)] =
     parsed(
       casParser,
       usage = "CAS <key> <oldValue> <newValue>",

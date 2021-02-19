@@ -18,7 +18,7 @@ class OperationsAndProperties extends AnyFlatSpec with Matchers with BeforeAndAf
     val seed = 123L;
     JSimulationScenario.setSeed(seed);
     val simpleBootScenario = SimpleScenario.scenario(nServers);
-    val res                = SimulationResultSingleton.getInstance();
+    val _                  = SimulationResultSingleton.getInstance();
     SimulationResult += ("messages" -> nMessages);
     simpleBootScenario.simulate(classOf[LauncherComp]);
   }
@@ -83,7 +83,7 @@ class OperationsAndProperties extends AnyFlatSpec with Matchers with BeforeAndAf
       - If process p decides u and process q decides v then one is a prefix of the other
    */
   "Decided values" should "not diverge (Uniform Agreement)" in {
-    var decidedMap = mutable.Map.empty[Int, Map[String, List[String]]];
+    val decidedMap = mutable.Map.empty[Int, Map[String, List[String]]];
 
     for (s <- 1 to nServers) {
       val address    = SimpleScenario.serverBase + s;
@@ -132,8 +132,6 @@ class OperationsAndProperties extends AnyFlatSpec with Matchers with BeforeAndAf
       val address     = SimpleScenario.serverBase + s;
       val numProposed = SimulationResult.get[Int](s"$address.numProposed").getOrElse(0);
       val numDecided  = SimulationResult.get[Int](s"$address.numDecided").getOrElse(0);
-
-      var decided = List.empty[String];
 
       for (i <- 0 to numProposed - 1) {
         val proposal = SimulationResult.get[String](s"$address.proposed.$i").get;

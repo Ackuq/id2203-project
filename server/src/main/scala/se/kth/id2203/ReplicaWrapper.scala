@@ -14,15 +14,16 @@ import se.kth.id2203.protocols.sequence_consencus.SequencePaxos
 import se.kth.id2203.protocols.ble.BallotLeaderElectionPort
 import se.kth.id2203.protocols.sequence_consencus.SequenceConsensusPort
 import se.kth.id2203.networking.NetAddress
+import se.sics.kompics.Component
 
 class ReplicaWrapper extends ComponentDefinition {
-  val self  = cfg.getValue[NetAddress]("id2203.project.address");
-  val boot  = requires(Bootstrapping);
-  val pLink = requires[PerfectLinkPort];
-  val net   = requires[Network];
-  val timer = requires[Timer];
+  val self: NetAddress  = cfg.getValue[NetAddress]("id2203.project.address");
+  val boot: PositivePort[Bootstrapping.type]  = requires(Bootstrapping);
+  val pLink: PositivePort[PerfectLinkPort] = requires[PerfectLinkPort];
+  val net: PositivePort[Network]   = requires[Network];
+  val timer: PositivePort[Timer] = requires[Timer];
 
-  val kv = create(classOf[KVService], Init.NONE);
+  val kv: Component = create(classOf[KVService], Init.NONE);
 
   boot uponEvent {
     case Booted(assignment: LookupTable) => {

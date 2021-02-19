@@ -40,12 +40,12 @@ class BootstrapClient extends ComponentDefinition {
   import BootstrapClient._;
 
   //******* Ports ******
-  val bootstrap = provides(Bootstrapping);
-  val timer     = requires[Timer];
-  val net       = requires[Network];
+  val bootstrap: NegativePort[Bootstrapping.type] = provides(Bootstrapping);
+  val timer: PositivePort[Timer]     = requires[Timer];
+  val net: PositivePort[Network]       = requires[Network];
   //******* Fields ******
-  val self   = cfg.getValue[NetAddress]("id2203.project.address");
-  val server = cfg.getValue[NetAddress]("id2203.project.bootstrap-address");
+  val self: NetAddress   = cfg.getValue[NetAddress]("id2203.project.address");
+  val server: NetAddress = cfg.getValue[NetAddress]("id2203.project.bootstrap-address");
 
   private var state: State = Waiting;
 
@@ -78,7 +78,7 @@ class BootstrapClient extends ComponentDefinition {
   }
 
   net uponEvent {
-    case NetMessage(header, Boot(assignment)) => {
+    case NetMessage(_, Boot(assignment)) => {
       state match {
         case Waiting => {
           log.info("{} Booting up.", self);

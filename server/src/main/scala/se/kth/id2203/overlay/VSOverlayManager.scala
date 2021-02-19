@@ -45,15 +45,15 @@ import scala.collection.mutable
 class VSOverlayManager extends ComponentDefinition {
 
   //******* Ports ******
-  val route = provides(Routing);
-  val boot  = requires(Bootstrapping);
-  val net   = requires[Network];
-  val timer = requires[Timer];
+  val route: NegativePort[Routing.type] = provides(Routing);
+  val boot: PositivePort[Bootstrapping.type]  = requires(Bootstrapping);
+  val net: PositivePort[Network]   = requires[Network];
+  val timer: PositivePort[Timer] = requires[Timer];
   //******* Custom Ports ******
-  val pLink = requires[PerfectLinkPort];
+  val pLink: PositivePort[PerfectLinkPort] = requires[PerfectLinkPort];
 
   //******* Fields ******
-  val self                             = cfg.getValue[NetAddress]("id2203.project.address");
+  val self: NetAddress                             = cfg.getValue[NetAddress]("id2203.project.address");
   private var lut: Option[LookupTable] = None;
   private val leaders                  = mutable.Map.empty[Int, NetAddress];
   //******* Handlers ******
@@ -74,14 +74,14 @@ class VSOverlayManager extends ComponentDefinition {
   }
 
   pLink uponEvent {
-    case PL_Deliver(src, Leader(leader, group)) => {
+    case PL_Deliver(_, Leader(leader, group)) => {
       /* A leader has notified us about their leadership, neat */
       leaders += (group -> leader);
     }
   }
 
   net uponEvent {
-    case NetMessage(header, x @ RouteMsg(key, msg)) => {
+    case NetMessage(header, RouteMsg(key, msg)) => {
       val groupIndex = lut.get.getPartitionIndex(key);
 
       if (leaders(groupIndex).sameHostAs(self)) {

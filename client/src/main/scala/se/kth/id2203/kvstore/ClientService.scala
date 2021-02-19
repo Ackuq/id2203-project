@@ -40,11 +40,11 @@ case class OpWithPromise(op: Operation, promise: Promise[OpResponse] = Promise()
 class ClientService extends ComponentDefinition {
 
   //******* Ports ******
-  val timer = requires[Timer];
-  val net   = requires[Network];
+  val timer: PositivePort[Timer] = requires[Timer];
+  val net: PositivePort[Network]   = requires[Network];
   //******* Fields ******
-  val self                                  = cfg.getValue[NetAddress]("id2203.project.address");
-  val server                                = cfg.getValue[NetAddress]("id2203.project.bootstrap-address");
+  val self: NetAddress                                  = cfg.getValue[NetAddress]("id2203.project.address");
+  val server: NetAddress                                = cfg.getValue[NetAddress]("id2203.project.bootstrap-address");
   private var connected: Option[ConnectAck] = None;
   private var timeoutId: Option[UUID]       = None;
   private val pending                       = mutable.SortedMap.empty[UUID, Promise[OpResponse]];
@@ -64,7 +64,7 @@ class ClientService extends ComponentDefinition {
   }
 
   net uponEvent {
-    case NetMessage(header, ack @ ConnectAck(id, clusterSize)) => {
+    case NetMessage(_, ack @ ConnectAck(id, clusterSize)) => {
       log.info(s"Client connected to $server, cluster size is $clusterSize");
       if (id != timeoutId.get) {
         log.error("Received wrong response id! System may be inconsistent. Shutting down...");
@@ -75,7 +75,7 @@ class ClientService extends ComponentDefinition {
       val tc = new Thread(c);
       tc.start();
     }
-    case NetMessage(header, or @ OpResponse(result, id, status)) => {
+    case NetMessage(_, or @ OpResponse(_, id, _)) => {
       log.debug(s"Got OpResponse: $or");
       pending.remove(id) match {
         case Some(promise) => promise.success(or);
@@ -87,7 +87,7 @@ class ClientService extends ComponentDefinition {
   timer uponEvent {
     case ConnectTimeout(_) => {
       connected match {
-        case Some(ack) => // already connected
+        case Some(ack @ _) => // already connected
         case None => {
           log.error(s"Connection to server $server did not succeed. Shutting down...");
           Kompics.asyncShutdown();

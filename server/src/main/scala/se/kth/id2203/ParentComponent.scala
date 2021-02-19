@@ -32,23 +32,24 @@ import se.sics.kompics.network.Network;
 import se.sics.kompics.timer.Timer;
 
 /** Custom Protocol */
-import se.kth.id2203.protocols.perfect_link.{PerfectLink, PerfectLinkPort};
+import se.kth.id2203.protocols.perfect_link.{PerfectLink, PerfectLinkPort}
+import se.sics.kompics.Component;
 
 class ParentComponent extends ComponentDefinition {
 
   //******* Ports ******
-  val net   = requires[Network];
-  val timer = requires[Timer];
+  val net: PositivePort[Network]   = requires[Network];
+  val timer: PositivePort[Timer] = requires[Timer];
   //******* Custom components ******
-  val pLink = create(classOf[PerfectLink], Init.NONE);
+  val pLink: Component = create(classOf[PerfectLink], Init.NONE);
   //******* Children ******
-  val overlay = create(classOf[VSOverlayManager], Init.NONE);
-  val boot = cfg.readValue[NetAddress]("id2203.project.bootstrap-address") match {
+  val overlay: Component = create(classOf[VSOverlayManager], Init.NONE);
+  val boot: Component = cfg.readValue[NetAddress]("id2203.project.bootstrap-address") match {
     case Some(_) => create(classOf[BootstrapClient], Init.NONE); // start in client mode
     case None    => create(classOf[BootstrapServer], Init.NONE); // start in server mode
   }
 
-  val replicaWrapper = create(classOf[ReplicaWrapper], Init.NONE);
+  val replicaWrapper: Component = create(classOf[ReplicaWrapper], Init.NONE);
 
   {
     // Perfect Link

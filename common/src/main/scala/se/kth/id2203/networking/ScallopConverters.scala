@@ -27,13 +27,13 @@ import java.net.InetAddress;
 import org.rogach.scallop._;
 
 object ScallopConverters {
-  implicit val netAddressConverter = singleArgConverter[NetAddress] { s =>
+  implicit val netAddressConverter: ValueConverter[NetAddress] = singleArgConverter[NetAddress] { s =>
     val a = NetAddressConverter.convert(s);
     assert(a != null);
     a
   }
 
-  implicit val inetAddressConverter = singleArgConverter[InetAddress] { s =>
+  implicit val inetAddressConverter: ValueConverter[InetAddress] = singleArgConverter[InetAddress] { s =>
     InetAddress.getByName(s)
   }
 }

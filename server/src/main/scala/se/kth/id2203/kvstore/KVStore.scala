@@ -59,7 +59,7 @@ class KVService extends ComponentDefinition {
         log.info(s"[$self] committing $op");
       }
       op match {
-        case PUT(key, value, id) => {
+        case PUT(key, value, _) => {
           store.put(key, value);
 
           if (role == Role.LEADER) {
@@ -68,7 +68,7 @@ class KVService extends ComponentDefinition {
             )
           }
         }
-        case GET(key, id) =>
+        case GET(key, _) =>
           if (role == Role.LEADER) {
             store.get(key) match {
               case Some(value) => trigger(NetMessage(self, src, op.response(value, OpCode.Ok)) -> net)
@@ -76,7 +76,7 @@ class KVService extends ComponentDefinition {
                 trigger(NetMessage(self, src, op.response(OpCode.NotFound)) -> net)
             }
           }
-        case CAS(key, oldValue, newValue, id) => {
+        case CAS(key, oldValue, newValue, _) => {
           store.get(key) match {
             case Some(value) => {
               if (value == oldValue) {

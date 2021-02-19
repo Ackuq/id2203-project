@@ -84,7 +84,7 @@ class ScenarioClient extends ComponentDefinition {
   }
 
   net uponEvent {
-    case NetMessage(header, or @ OpResponse(result, id, status)) => {
+    case NetMessage(_, or @ OpResponse(result, id, status)) => {
       logger.info(s"Got OpResponse: $or");
       pending.remove(id) match {
         case Some(key) => SimulationResult += (key -> result.getOrElse(status.toString()));

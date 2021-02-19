@@ -11,33 +11,33 @@ class SequencePaxos(init: Init[SequencePaxos]) extends ComponentDefinition {
   import Role._;
   import State._;
 
-  val self = cfg.getValue[NetAddress]("id2203.project.address");
+  val self: NetAddress = cfg.getValue[NetAddress]("id2203.project.address");
   val (pi, others, groupIndex) = init match {
     case Init(topology: Set[NetAddress] @unchecked, groupIndex: Int) => (topology, topology - self, groupIndex)
     case _                                                           => (Set(self), Set.empty[NetAddress], -1)
   }
-  val majority        = ((pi.size + 1) / 2f).ceil.toInt;
-  val bootstrapServer = cfg.getValue[NetAddress]("id2203.project.bootstrap-address");
+  val majority: Int        = ((pi.size + 1) / 2f).ceil.toInt;
+  val bootstrapServer: NetAddress = cfg.getValue[NetAddress]("id2203.project.bootstrap-address");
   //********** Subscriptions **********
-  val pLink = requires[PerfectLinkPort]
-  val ble   = requires[BallotLeaderElectionPort];
-  val sc    = provides[SequenceConsensusPort];
+  val pLink: PositivePort[PerfectLinkPort] = requires[PerfectLinkPort]
+  val ble: PositivePort[BallotLeaderElectionPort]   = requires[BallotLeaderElectionPort];
+  val sc: NegativePort[SequenceConsensusPort]    = provides[SequenceConsensusPort];
 
   //********** Internal state **********
-  var state                      = (FOLLOWER, UNKNOWN);
+  var state: (Role.Value, State.Value)                      = (FOLLOWER, UNKNOWN);
   var nL                         = 0L;
   var nProm                      = 0L;
   var leader: Option[NetAddress] = None;
   var na                         = 0L;
-  var va                         = List.empty[RSM_Command];
+  var va: List[RSM_Command]                         = Nil;
   var ld                         = 0;
 
   //********** Leader state **********
-  var propCmds = List.empty[RSM_Command];
-  var las      = Map.empty[NetAddress, Int];
-  var lds      = Map.empty[NetAddress, Int];
+  var propCmds: List[RSM_Command] = Nil;
+  var las: Map[NetAddress,Int]      = Map.empty[NetAddress, Int];
+  var lds: Map[NetAddress,Int]      = Map.empty[NetAddress, Int];
   var lc       = 0;
-  var acks     = Map.empty[NetAddress, (Long, List[RSM_Command])];
+  var acks: Map[NetAddress,(Long, List[RSM_Command])]     = Map.empty[NetAddress, (Long, List[RSM_Command])];
 
   //********** Helpers **********
   def suffix(s: List[RSM_Command], l: Int): List[RSM_Command] = {
@@ -86,7 +86,7 @@ class SequencePaxos(init: Init[SequencePaxos]) extends ComponentDefinition {
   }
 
   pLink uponEvent {
-    case PL_Deliver(p, Prepare(np, ldp, n)) => {
+    case PL_Deliver(p, Prepare(np, ldp @ _, n)) => {
       if (nProm < np) {
         log.info(s"[$self] Follower preparing")
         nProm = np;
@@ -125,7 +125,7 @@ class SequencePaxos(init: Init[SequencePaxos]) extends ComponentDefinition {
         }
       }
     }
-    case PL_Deliver(p, AcceptSync(nL, sfx, ldp)) => {
+    case PL_Deliver(p, AcceptSync(nL, sfx, ldp @ _)) => {
       if ((nProm == nL) && (state == (FOLLOWER, PREPARE))) {
         na = nL;
         va = prefix(va, ld) ++ sfx;
