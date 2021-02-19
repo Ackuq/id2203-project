@@ -3,6 +3,8 @@ organization in ThisBuild := "se.kth.id2203"
 version in ThisBuild := "1.2.1-SNAPSHOT"
 scalaVersion in ThisBuild := "2.13.4"
 
+//
+
 // PROJECTS
 
 lazy val global = project
@@ -106,7 +108,10 @@ lazy val compilerOptions = Seq(
   "-language:postfixOps",
   "-deprecation",
   "-encoding",
-  "utf8"
+  "utf8",
+  // Scalafix options
+  "-Wunused",  // required by SemanticDB compiler plugin
+  "-Yrangepos" // required by SemanticDB compiler plugin
 )
 
 lazy val settings = Seq(
@@ -117,7 +122,10 @@ lazy val settings = Seq(
     Resolver.bintrayRepo("lkrollcom", "maven"),
     Resolver.mavenLocal
   ),
-  updateOptions := updateOptions.value.withCachedResolution(false)
+  updateOptions := updateOptions.value.withCachedResolution(false),
+  // Scalafix
+  semanticdbEnabled := true,                       // enable SemanticDB
+  semanticdbVersion := scalafixSemanticdb.revision // use Scalafix compatible version
 )
 
 lazy val assemblySettings = Seq(

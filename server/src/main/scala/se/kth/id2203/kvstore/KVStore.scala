@@ -24,7 +24,6 @@
 package se.kth.id2203.kvstore;
 
 import se.kth.id2203.networking._;
-import se.kth.id2203.overlay.Routing;
 import se.sics.kompics.sl._;
 import se.sics.kompics.network.Network;
 import scala.collection.mutable.HashMap

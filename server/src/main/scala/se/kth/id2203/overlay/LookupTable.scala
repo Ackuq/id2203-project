@@ -24,10 +24,8 @@
 package se.kth.id2203.overlay;
 
 import com.larskroll.common.collections._;
-import java.util.Collection;
 import se.kth.id2203.bootstrapping.NodeAssignment;
 import se.kth.id2203.networking.NetAddress;
-import se.sics.kompics.sl.Config;
 
 /** Lookup table to be able to lookup the nodes that should replicate
   * @param replicationDegree In how many nodes a value should be replicated

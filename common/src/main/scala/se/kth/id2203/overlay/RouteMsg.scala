@@ -24,7 +24,6 @@
 
 package se.kth.id2203.overlay
 
-import java.util.UUID;
 import se.sics.kompics.KompicsEvent;
 
 @SerialVersionUID(-7286974413466233866L)

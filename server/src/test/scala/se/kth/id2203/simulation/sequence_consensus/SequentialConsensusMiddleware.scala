@@ -2,15 +2,9 @@ package se.kth.id2203.simulation.sequence_consensus;
 
 import se.sics.kompics.sl._;
 import se.sics.kompics.sl.simulator.SimulationResult;
-import se.sics.kompics.network.Network;
 
-import se.kth.id2203.overlay.RouteMsg;
 import se.kth.id2203.networking.NetAddress;
 import se.kth.id2203.kvstore._;
-import java.util.UUID;
-import se.sics.kompics.timer.Timer;
-import scala.collection.mutable;
-import se.kth.id2203.networking.NetMessage;
 import se.kth.id2203.protocols.sequence_consencus.{SC_Decide, SC_Propose, SequenceConsensusPort};
 
 class SequentialConsensusMiddleware(init: Init[SequentialConsensusMiddleware]) extends ComponentDefinition {
@@ -23,8 +17,7 @@ class SequentialConsensusMiddleware(init: Init[SequentialConsensusMiddleware]) e
     case Init(partition: Int) => partition
     case _                    => 0
   }
-  private val self   = cfg.getValue[NetAddress]("id2203.project.address").getIp().getHostAddress();
-  private val server = cfg.getValue[NetAddress]("id2203.project.bootstrap-address");
+  private val self = cfg.getValue[NetAddress]("id2203.project.address").getIp().getHostAddress();
 
   private var decided     = List.empty[String];
   private var numDecided  = 0;

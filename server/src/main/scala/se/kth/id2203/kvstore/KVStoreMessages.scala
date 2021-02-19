@@ -1,6 +1,4 @@
 package se.kth.id2203.kvstore
-
-import se.sics.kompics.sl._;
 import se.kth.id2203.networking.NetAddress
 import se.kth.id2203.protocols.sequence_consencus.RSM_Command
 import se.kth.id2203.protocols.sequence_consencus.Role

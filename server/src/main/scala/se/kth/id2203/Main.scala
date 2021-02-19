@@ -24,7 +24,6 @@
 package se.kth.id2203;
 
 import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.UUID;
 import se.kth.id2203.networking._;
 import se.sics.kompics.Kompics;

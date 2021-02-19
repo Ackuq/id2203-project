@@ -24,7 +24,6 @@
 package se.kth.id2203.networking;
 
 import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.Map;
 import se.sics.kompics.config.Conversions;
 import se.sics.kompics.config.Converter;

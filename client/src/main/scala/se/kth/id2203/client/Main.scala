@@ -24,15 +24,12 @@
 package se.kth.id2203.client;
 
 import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.UUID;
 import se.kth.id2203.networking._;
-import se.kth.id2203.kvstore.ClientConsole;
 import se.sics.kompics.Kompics;
 import se.sics.kompics.config._;
 import se.sics.kompics.network.netty.serialization.Serializers;
-import org.rogach.scallop._
-import org.apache.log4j.{Layout, LogManager, PatternLayout, WriterAppender};
+import org.rogach.scallop._;
 
 class Conf(arguments: Seq[String]) extends ScallopConf(arguments) {
   import ScallopConverters._;

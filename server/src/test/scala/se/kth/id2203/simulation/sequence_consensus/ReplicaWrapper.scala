@@ -4,7 +4,6 @@ import se.sics.kompics.sl._;
 import se.kth.id2203.protocols.perfect_link.PerfectLinkPort;
 
 import se.kth.id2203.kvstore.KVService;
-import se.kth.id2203.overlay.Routing;
 import se.sics.kompics.network.Network;
 import se.kth.id2203.bootstrapping.Bootstrapping
 import se.kth.id2203.bootstrapping.Booted

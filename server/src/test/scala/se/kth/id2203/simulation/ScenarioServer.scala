@@ -24,7 +24,6 @@
 package se.kth.id2203.simulation;
 
 import se.kth.id2203.bootstrapping._
-import se.kth.id2203.kvstore.KVService;
 import se.kth.id2203.networking.NetAddress;
 import se.kth.id2203.overlay._
 import se.sics.kompics.sl._

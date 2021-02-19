@@ -30,7 +30,6 @@ import util.log4j.ColoredPatternLayout;
 import fastparse._, NoWhitespace._
 import concurrent.{Await, Future => ScalaFuture}
 import concurrent.duration._
-import io.netty.util.concurrent.Future
 
 object ClientConsole {
   def lowercase[_: P] = P(CharIn("a-z"))

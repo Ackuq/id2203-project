@@ -1,20 +1,13 @@
 package se.kth.id2203.simulation
 
-import org.scalatest.flatspec.AnyFlatSpec;
-import org.scalatest.matchers.should.Matchers
 import java.net.{InetAddress, UnknownHostException};
 import se.sics.kompics.network.Address
 import se.sics.kompics.sl._;
 import se.sics.kompics.sl.simulator._;
 import se.sics.kompics.simulator.{SimulationScenario => JSimulationScenario}
-import se.sics.kompics.simulator.run.LauncherComp
-import se.sics.kompics.simulator.result.SimulationResultSingleton;
 import se.sics.kompics.simulator.network.impl.NetworkModels
 import scala.concurrent.duration._
 import se.kth.id2203.networking.NetAddress
-import scala.collection.mutable
-import org.scalatest.BeforeAndAfterAll
-import se.kth.id2203.simulation.sequence_consensus.ReplicaWrapper;
 
 object SimpleScenario {
 
