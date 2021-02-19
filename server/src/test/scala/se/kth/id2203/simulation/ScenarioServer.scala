@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package se.kth.id2203.simulation.sequence_consensus;
+package se.kth.id2203.simulation;
 
 import se.kth.id2203.bootstrapping._
 import se.kth.id2203.kvstore.KVService;
@@ -32,10 +32,14 @@ import se.sics.kompics.Init;
 import se.sics.kompics.network.Network;
 import se.sics.kompics.timer.Timer;
 
+import se.kth.id2203.simulation.sequence_consensus.ReplicaWrapper;
+
 /** Custom Protocol */
 import se.kth.id2203.protocols.perfect_link.{PerfectLink, PerfectLinkPort};
 
-class ParentComponent extends ComponentDefinition {
+/** Copy of ParentComponent with bindings to custom ReplicaWrapper
+  */
+class ScenarioServer extends ComponentDefinition {
 
   //******* Ports ******
   val net   = requires[Network];

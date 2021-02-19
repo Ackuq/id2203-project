@@ -30,13 +30,14 @@ class ReplicaWrapper extends ComponentDefinition {
       try {
         val (key, partition) = assignment.getPartition(self);
 
-        val ble            = create(classOf[GossipLeaderElection], Init[GossipLeaderElection](partition.toSet));
-        val seqCons        = create(classOf[SequencePaxos], Init[SequencePaxos](partition.toSet, key));
-        val scenarioServer = create(classOf[ScenarioServer], Init[ScenarioServer](key));
+        val ble     = create(classOf[GossipLeaderElection], Init[GossipLeaderElection](partition.toSet));
+        val seqCons = create(classOf[SequencePaxos], Init[SequencePaxos](partition.toSet, key));
+        val seqConsMiddleware =
+          create(classOf[SequentialConsensusMiddleware], Init[SequentialConsensusMiddleware](key));
 
         trigger(new Start() -> ble.control());
         trigger(new Start() -> seqCons.control());
-        trigger(new Start() -> scenarioServer.control());
+        trigger(new Start() -> seqConsMiddleware.control());
 
         // (Gossip) Ballot Leader Election
         connect[PerfectLinkPort](pLink -> ble);
@@ -47,12 +48,12 @@ class ReplicaWrapper extends ComponentDefinition {
         connect[BallotLeaderElectionPort](ble -> seqCons)
 
         // Scenario client
-        connect[SequenceConsensusPort](seqCons -> scenarioServer);
+        connect[SequenceConsensusPort](seqCons -> seqConsMiddleware);
 
         // KV
-        connect[Network](net                          -> kv);
-        connect[PerfectLinkPort](pLink                -> kv);
-        connect[SequenceConsensusPort](scenarioServer -> kv);
+        connect[Network](net                             -> kv);
+        connect[PerfectLinkPort](pLink                   -> kv);
+        connect[SequenceConsensusPort](seqConsMiddleware -> kv);
 
       } catch {
         case e: IllegalArgumentException => {

@@ -40,9 +40,20 @@ class ScenarioClient extends ComponentDefinition {
   val net   = requires[Network];
   val timer = requires[Timer];
   //******* Fields ******
-  val self            = cfg.getValue[NetAddress]("id2203.project.address");
-  val server          = cfg.getValue[NetAddress]("id2203.project.bootstrap-address");
+  val self   = cfg.getValue[NetAddress]("id2203.project.address");
+  val server = cfg.getValue[NetAddress]("id2203.project.bootstrap-address");
+
   private val pending = mutable.Map.empty[UUID, String];
+
+  def sendMessage(op: Op, key: String): Unit = {
+    val routeMsg =
+      RouteMsg(op.key, op); // don't know which partition is responsible, so ask the bootstrap server to forward it
+    trigger(NetMessage(self, server, routeMsg) -> net);
+    pending += (op.id                          -> key);
+    logger.info("Sending {}", op);
+    SimulationResult += (key -> "Sent");
+  }
+
   //******* Handlers ******
   ctrl uponEvent {
     case _: Start => {
@@ -50,49 +61,31 @@ class ScenarioClient extends ComponentDefinition {
       for (i <- 0 to messages) {
         val op  = new PUT(s"key$i", s"value$i");
         val key = s"${op.key}.put"
-        val routeMsg =
-          RouteMsg(op.key, op); // don't know which partition is responsible, so ask the bootstrap server to forward it
-        trigger(NetMessage(self, server, routeMsg) -> net);
-        pending += (op.id                          -> key);
-        logger.info("Sending {}", op);
-        SimulationResult += (key -> "Sent");
+        sendMessage(op, key);
       }
       for (i <- 0 to messages) {
         val op  = new GET(s"key$i");
         val key = s"${op.key}.get"
-        val routeMsg =
-          RouteMsg(op.key, op); // don't know which partition is responsible, so ask the bootstrap server to forward it
-        trigger(NetMessage(self, server, routeMsg) -> net);
-        pending += (op.id                          -> key);
-        logger.info("Sending {}", op);
-        SimulationResult += (key -> "Sent");
+        sendMessage(op, key);
       }
       // Test CAS with wrong reference
       for (i <- 0 to messages) {
-        val op       = new CAS(s"key$i", s"notSameValue$i", s"willNotSucceed$i");
-        val key      = s"${op.key}.cas_1";
-        val routeMsg = RouteMsg(op.key, op);
-        trigger(NetMessage(self, server, routeMsg) -> net);
-        pending += (op.id                          -> key)
-        logger.info("Sending {}", op);
-        SimulationResult += (key -> "Sent");
+        val op  = new CAS(s"key$i", s"notSameValue$i", s"willNotSucceed$i");
+        val key = s"${op.key}.cas_1";
+        sendMessage(op, key);
       }
       // Test CAS with correct reference
       for (i <- 0 to messages) {
-        val op       = new CAS(s"key$i", s"value$i", s"newValue$i");
-        val key      = s"${op.key}.cas_2";
-        val routeMsg = RouteMsg(op.key, op);
-        trigger(NetMessage(self, server, routeMsg) -> net);
-        pending += (op.id                          -> key)
-        logger.info("Sending {}", op);
-        SimulationResult += (key -> "Sent");
+        val op  = new CAS(s"key$i", s"value$i", s"newValue$i");
+        val key = s"${op.key}.cas_2";
+        sendMessage(op, key);
       }
     }
   }
 
   net uponEvent {
     case NetMessage(header, or @ OpResponse(result, id, status)) => {
-      logger.debug(s"Got OpResponse: $or");
+      logger.info(s"Got OpResponse: $or");
       pending.remove(id) match {
         case Some(key) => SimulationResult += (key -> result.getOrElse(status.toString()));
         case None      => logger.warn("ID $id was not pending! Ignoring response.");

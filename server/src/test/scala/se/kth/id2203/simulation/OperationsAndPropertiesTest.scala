@@ -1,8 +1,7 @@
 package se.kth.id2203.simulation
 
 import org.scalatest.flatspec.AnyFlatSpec;
-import org.scalatest.matchers.must.Matchers
-import org.scalatest.BeforeAndAfter
+import org.scalatest.matchers.should.Matchers
 import java.net.{InetAddress, UnknownHostException};
 import se.sics.kompics.network.Address
 import se.sics.kompics.sl._;
@@ -13,32 +12,54 @@ import se.sics.kompics.simulator.result.SimulationResultSingleton;
 import se.sics.kompics.simulator.network.impl.NetworkModels
 import scala.concurrent.duration._
 import se.kth.id2203.networking.NetAddress
-import se.kth.id2203.simulation.sequence_consensus.{ParentComponent => ScenarioServer};
 import scala.collection.mutable
+import org.scalatest.BeforeAndAfterAll
 
-class SequenceConsensusTest extends AnyFlatSpec with Matchers with BeforeAndAfter {
+class OperationsAndProperties extends AnyFlatSpec with Matchers with BeforeAndAfterAll {
   // Use 6 servers
   private val nServers  = 6;
   private val nMessages = 10;
 
-  before {
+  override def beforeAll(): Unit = {
     val seed = 123L;
     JSimulationScenario.setSeed(seed);
-    val simpleBootScenario = SimpleSequenceConsensusScenario.scenario(nServers);
+    val simpleBootScenario = SimpleScenario.scenario(nServers);
     val res                = SimulationResultSingleton.getInstance();
     SimulationResult += ("messages" -> nMessages);
     simpleBootScenario.simulate(classOf[LauncherComp]);
   }
 
+  /** Test that all operations got expected response
+    */
+  "Operations" should "be implemented" in {
+    for (i <- 0 to nMessages) {
+      // PUTs
+      SimulationResult.get[String](s"key$i.put") should be(Some(s"value$i"));
+    }
+    for (i <- 0 to nMessages) {
+      // GETs
+      SimulationResult.get[String](s"key$i.get") should be(Some(s"value$i"));
+    }
+    for (i <- 0 to nMessages) {
+      // Failing CASs, should remain same
+      SimulationResult.get[String](s"key$i.cas_1") should be(Some(s"value$i"));
+    }
+    for (i <- 0 to nMessages) {
+      // Correct CAS, value should be changed to newValue$i
+      SimulationResult.get[String](s"key$i.cas_2") should be(Some(s"newValue$i"));
+    }
+  }
+
   /* Validity:
       - If process p decides v then v is a sequence of proposed commands (without duplicates)
    */
-  "Decided values" must "be non-duplicate proposed commands (Validity)" in {
+  "Decided values" should "be non-duplicate proposed commands (Validity)" in {
+
     var proposals  = List.empty[String];
     var allDecided = List.empty[String];
 
     for (s <- 1 to nServers) {
-      val address     = SimpleSequenceConsensusScenario.serverBase + s;
+      val address     = SimpleScenario.serverBase + s;
       val numProposed = SimulationResult.get[Int](s"$address.numProposed").getOrElse(0);
       val numDecided  = SimulationResult.get[Int](s"$address.numDecided").getOrElse(0);
       var decided     = List.empty[String];
@@ -51,24 +72,28 @@ class SequenceConsensusTest extends AnyFlatSpec with Matchers with BeforeAndAfte
         decided = decided :+ SimulationResult.get[String](s"$address.decided.$i").get;
       }
       // Check for duplicates
-      decided.size must be(decided.distinct.size)
+      decided.size should be(decided.distinct.size)
+      allDecided = allDecided ++ decided;
     }
+
+    allDecided.size should not be 0;
+    proposals.size should not be 0;
 
     // Check that all decisions are proposals
     for (decision <- allDecided) {
-      proposals.contains(decision) must be(true);
+      proposals.contains(decision) should be(true);
     }
   }
 
   /* Uniform Agreement
       - If process p decides u and process q decides v then one is a prefix of the other
    */
-  "Decided values" must "not diverge (Uniform Agreement)" in {
+  "Decided values" should "not diverge (Uniform Agreement)" in {
     var decidedMap = mutable.Map.empty[Int, Map[String, List[String]]];
 
     for (s <- 1 to nServers) {
-      val address    = SimpleSequenceConsensusScenario.serverBase + s;
-      val partition  = SimulationResult.get[Int](s"$address.partition").get
+      val address    = SimpleScenario.serverBase + s;
+      val partition  = SimulationResult.get[Int](s"$address.partition").get;
       val numDecided = SimulationResult.get[Int](s"$address.numDecided").getOrElse(0);
       var decided    = List.empty[String];
 
@@ -83,6 +108,8 @@ class SequenceConsensusTest extends AnyFlatSpec with Matchers with BeforeAndAfte
       decidedMap(partition) = decidedMap(partition) + (address -> decided);
     }
 
+    decidedMap.size should not be 0
+
     // Check that all servers has decided commands in same order
     for (partition <- decidedMap.keys) {
       // Check against all different nodes within same partition
@@ -92,7 +119,7 @@ class SequenceConsensusTest extends AnyFlatSpec with Matchers with BeforeAndAfte
           if (address != otherAddress) {
             // They should both have the same length, but we'll use Math.min in case of prefixes
             for (i <- 0 to Math.min(decided.size, otherDecided.size) - 1) {
-              decided(i) must be(otherDecided(i))
+              decided(i) should be(otherDecided(i))
             }
           }
         }
@@ -103,12 +130,12 @@ class SequenceConsensusTest extends AnyFlatSpec with Matchers with BeforeAndAfte
   /** Termination (liveness)
     *  - If command C is proposed by a correct process then eventually every correct process decides a sequence containing C
     */
-  "If a command is proposed then it" must "eventually be decided on in every correct process (Termination)" in {
+  "If a command is proposed then it" should "eventually be decided on in every correct process (Termination)" in {
     var allProposals = List.empty[String];
     var allDecision  = List.empty[String];
 
     for (s <- 1 to nServers) {
-      val address     = SimpleSequenceConsensusScenario.serverBase + s;
+      val address     = SimpleScenario.serverBase + s;
       val numProposed = SimulationResult.get[Int](s"$address.numProposed").getOrElse(0);
       val numDecided  = SimulationResult.get[Int](s"$address.numDecided").getOrElse(0);
 
@@ -125,67 +152,12 @@ class SequenceConsensusTest extends AnyFlatSpec with Matchers with BeforeAndAfte
       }
     }
 
+    allProposals.size should not be 0;
+    allDecision.size should not be 0;
+
     // All proposals should be decided by some node
     for (proposal <- allProposals) {
-      allDecision.contains(proposal) must be(true)
+      allDecision.contains(proposal) should be(true)
     }
-  }
-}
-
-object SimpleSequenceConsensusScenario {
-
-  val serverBase = "192.193.0.";
-
-  import Distributions._
-  // needed for the distributions, but needs to be initialised after setting the seed
-  implicit val random = JSimulationScenario.getRandom();
-
-  private def intToServerAddress(i: Int): Address = {
-    try {
-      NetAddress(InetAddress.getByName(serverBase + i), 45678);
-    } catch {
-      case ex: UnknownHostException => throw new RuntimeException(ex);
-    }
-  }
-  private def intToClientAddress(i: Int): Address = {
-    try {
-      NetAddress(InetAddress.getByName("192.193.1." + i), 45678);
-    } catch {
-      case ex: UnknownHostException => throw new RuntimeException(ex);
-    }
-  }
-
-  private def isBootstrap(self: Int): Boolean = self == 1;
-
-  val setUniformLatencyNetwork = () => Op.apply((_: Unit) => ChangeNetwork(NetworkModels.withConstantDelay(2)));
-
-  val startServerOp = Op { (self: Integer) =>
-    val selfAddr = intToServerAddress(self)
-    val conf = if (isBootstrap(self)) {
-      // don't put this at the bootstrap server, or it will act as a bootstrap client
-      Map("id2203.project.address" -> selfAddr)
-    } else {
-      Map("id2203.project.address" -> selfAddr, "id2203.project.bootstrap-address" -> intToServerAddress(1))
-    };
-    // Use our custom scenario server to keep track of the internal state
-    StartNode(selfAddr, Init.none[ScenarioServer], conf);
-  };
-
-  val startClientOp = Op { (self: Integer) =>
-    val selfAddr = intToClientAddress(self)
-    val conf     = Map("id2203.project.address" -> selfAddr, "id2203.project.bootstrap-address" -> intToServerAddress(1));
-    StartNode(selfAddr, Init.none[ScenarioClient], conf);
-  };
-
-  def scenario(servers: Int): JSimulationScenario = {
-
-    val networkSetup = raise(1, setUniformLatencyNetwork()).arrival(constant(0));
-    val startCluster = raise(servers, startServerOp, 1.toN()).arrival(constant(1.second));
-    val startClients = raise(1, startClientOp, 1.toN()).arrival(constant(1.second));
-
-    networkSetup andThen
-      0.seconds afterTermination startCluster andThen
-      10.seconds afterTermination startClients andThen
-      100.seconds afterTermination Terminate
   }
 }
