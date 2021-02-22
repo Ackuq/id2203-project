@@ -1,5 +1,6 @@
 package se.kth.id2203.simulation
 
+import se.kth.id2203.simulation.scenarios.SimpleConsensusScenario;
 import org.scalatest.flatspec.AnyFlatSpec;
 import org.scalatest.matchers.should.Matchers
 import se.sics.kompics.sl.simulator._;
@@ -8,8 +9,12 @@ import se.sics.kompics.simulator.run.LauncherComp
 import se.sics.kompics.simulator.result.SimulationResultSingleton;
 import scala.collection.mutable
 import org.scalatest.BeforeAndAfterAll
+import org.scalatest.DoNotDiscover
 
-class OperationsAndProperties extends AnyFlatSpec with Matchers with BeforeAndAfterAll {
+/** Test suite that tests that verifies the properties of the KV-store
+  */
+@DoNotDiscover
+class PropertiesTest extends AnyFlatSpec with Matchers with BeforeAndAfterAll {
   // Use 6 servers
   private val nServers  = 6;
   private val nMessages = 10;
@@ -17,31 +22,10 @@ class OperationsAndProperties extends AnyFlatSpec with Matchers with BeforeAndAf
   override def beforeAll(): Unit = {
     val seed = 123L;
     JSimulationScenario.setSeed(seed);
-    val simpleBootScenario = SimpleScenario.scenario(nServers);
+    val simpleBootScenario = SimpleConsensusScenario.scenario(nServers);
     val _                  = SimulationResultSingleton.getInstance();
     SimulationResult += ("messages" -> nMessages);
     simpleBootScenario.simulate(classOf[LauncherComp]);
-  }
-
-  /** Test that all operations got expected response
-    */
-  "Operations" should "be implemented" in {
-    for (i <- 0 to nMessages) {
-      // PUTs
-      SimulationResult.get[String](s"key$i.put") should be(Some(s"value$i"));
-    }
-    for (i <- 0 to nMessages) {
-      // GETs
-      SimulationResult.get[String](s"key$i.get") should be(Some(s"value$i"));
-    }
-    for (i <- 0 to nMessages) {
-      // Failing CASs, should remain same
-      SimulationResult.get[String](s"key$i.cas_1") should be(Some(s"value$i"));
-    }
-    for (i <- 0 to nMessages) {
-      // Correct CAS, value should be changed to newValue$i
-      SimulationResult.get[String](s"key$i.cas_2") should be(Some(s"newValue$i"));
-    }
   }
 
   /* Validity:
@@ -53,7 +37,7 @@ class OperationsAndProperties extends AnyFlatSpec with Matchers with BeforeAndAf
     var allDecided = List.empty[String];
 
     for (s <- 1 to nServers) {
-      val address     = SimpleScenario.serverBase + s;
+      val address     = SimpleConsensusScenario.serverBase + s;
       val numProposed = SimulationResult.get[Int](s"$address.numProposed").getOrElse(0);
       val numDecided  = SimulationResult.get[Int](s"$address.numDecided").getOrElse(0);
       var decided     = List.empty[String];
@@ -86,7 +70,7 @@ class OperationsAndProperties extends AnyFlatSpec with Matchers with BeforeAndAf
     val decidedMap = mutable.Map.empty[Int, Map[String, List[String]]];
 
     for (s <- 1 to nServers) {
-      val address    = SimpleScenario.serverBase + s;
+      val address    = SimpleConsensusScenario.serverBase + s;
       val partition  = SimulationResult.get[Int](s"$address.partition").get;
       val numDecided = SimulationResult.get[Int](s"$address.numDecided").getOrElse(0);
       var decided    = List.empty[String];
@@ -129,7 +113,7 @@ class OperationsAndProperties extends AnyFlatSpec with Matchers with BeforeAndAf
     var allDecision  = List.empty[String];
 
     for (s <- 1 to nServers) {
-      val address     = SimpleScenario.serverBase + s;
+      val address     = SimpleConsensusScenario.serverBase + s;
       val numProposed = SimulationResult.get[Int](s"$address.numProposed").getOrElse(0);
       val numDecided  = SimulationResult.get[Int](s"$address.numDecided").getOrElse(0);
 

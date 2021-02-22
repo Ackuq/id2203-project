@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package se.kth.id2203.simulation;
+package se.kth.id2203.simulation.simulators;
 
 import se.kth.id2203.bootstrapping._
 import se.kth.id2203.networking.NetAddress;
@@ -36,9 +36,9 @@ import se.kth.id2203.simulation.sequence_consensus.ReplicaWrapper;
 /** Custom Protocol */
 import se.kth.id2203.protocols.perfect_link.{PerfectLink, PerfectLinkPort};
 
-/** Copy of ParentComponent with bindings to custom ReplicaWrapper
+/** Copy of ParentComponent with bindings to custom ReplicaWrapper which sends information about Paxos messages
   */
-class ScenarioServer extends ComponentDefinition {
+class ServerSimulator extends ComponentDefinition {
 
   //******* Ports ******
   val net   = requires[Network];

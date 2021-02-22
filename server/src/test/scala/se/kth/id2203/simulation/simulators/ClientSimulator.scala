@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package se.kth.id2203.simulation;
+package se.kth.id2203.simulation.simulators;
 
 import java.util.UUID;
 import se.kth.id2203.kvstore._;
@@ -34,7 +34,8 @@ import se.sics.kompics.timer.Timer;
 import se.sics.kompics.sl.simulator.SimulationResult;
 import collection.mutable;
 
-class ScenarioClient extends ComponentDefinition {
+/* Simulates the sending and receiving of messages */
+class ClientSimulator extends ComponentDefinition {
 
   //******* Ports ******
   val net   = requires[Network];
