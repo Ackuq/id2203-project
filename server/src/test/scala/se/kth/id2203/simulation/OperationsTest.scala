@@ -10,8 +10,6 @@ import se.sics.kompics.simulator.result.SimulationResultSingleton;
 import org.scalatest.BeforeAndAfter;
 import org.scalatest.DoNotDiscover
 
-/** Test suite that tests the different operations made by the client.
-  */
 @DoNotDiscover
 class OperationsTest extends AnyFlatSpec with Matchers with BeforeAndAfter {
 

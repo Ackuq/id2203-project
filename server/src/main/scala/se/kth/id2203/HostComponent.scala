@@ -35,7 +35,7 @@ import se.sics.kompics.Component;
 
 class HostComponent extends ComponentDefinition {
 
-  val self: NetAddress   = cfg.getValue[NetAddress]("id2203.project.address");
+  val self: NetAddress  = cfg.getValue[NetAddress]("id2203.project.address");
   val timer: Component  = create(classOf[JavaTimer], Init.NONE);
   val net: Component    = create(classOf[NettyNetwork], new NettyInit(self));
   val parent: Component = create(classOf[ParentComponent], Init.NONE);

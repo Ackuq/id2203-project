@@ -18,21 +18,21 @@ class GossipLeaderElection(init: Init[GossipLeaderElection]) extends ComponentDe
     case Init(topology: Set[NetAddress] @unchecked) => topology
     case _                                          => Set.empty[NetAddress]
   }
-  val delta: Long     = cfg.getValue[Long]("id2203.project.epfd.delay");
-  val ballotOne = 0x0100000000L
+  val delta: Long = cfg.getValue[Long]("id2203.project.epfd.delay");
+  val ballotOne   = 0x0100000000L
 
   //****** Subscriptions ******
-  val timer: PositivePort[Timer] = requires[Timer];
-  val pLink: PositivePort[PerfectLinkPort] = requires[PerfectLinkPort];
-  val ble: NegativePort[BallotLeaderElectionPort]   = provides[BallotLeaderElectionPort];
+  val timer: PositivePort[Timer]                  = requires[Timer];
+  val pLink: PositivePort[PerfectLinkPort]        = requires[PerfectLinkPort];
+  val ble: NegativePort[BallotLeaderElectionPort] = provides[BallotLeaderElectionPort];
   //****** Variables ******
   var round                              = 0;
-  var ballots: Map[NetAddress,Long]                            = Map.empty[NetAddress, Long];
+  var ballots: Map[NetAddress, Long]     = Map.empty[NetAddress, Long];
   var leader: Option[(Long, NetAddress)] = None;
 
-  var ballot: Long    = ballotFromNetworkAddress(0, self);
-  var period    = delta;
-  var maxBallot = ballot;
+  var ballot: Long = ballotFromNetworkAddress(0, self);
+  var period       = delta;
+  var maxBallot    = ballot;
 
   def increment(ballot: Long): Long = {
     ballot + ballotOne;

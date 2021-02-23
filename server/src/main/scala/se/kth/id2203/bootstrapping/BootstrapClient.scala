@@ -41,8 +41,8 @@ class BootstrapClient extends ComponentDefinition {
 
   //******* Ports ******
   val bootstrap: NegativePort[Bootstrapping.type] = provides(Bootstrapping);
-  val timer: PositivePort[Timer]     = requires[Timer];
-  val net: PositivePort[Network]       = requires[Network];
+  val timer: PositivePort[Timer]                  = requires[Timer];
+  val net: PositivePort[Network]                  = requires[Network];
   //******* Fields ******
   val self: NetAddress   = cfg.getValue[NetAddress]("id2203.project.address");
   val server: NetAddress = cfg.getValue[NetAddress]("id2203.project.bootstrap-address");
@@ -87,6 +87,7 @@ class BootstrapClient extends ComponentDefinition {
             case Some(tid) => trigger(new CancelPeriodicTimeout(tid) -> timer);
             case None      => // nothing to cancel
           }
+          timeoutId = None; // We have cancelled, it, remove so we won't try to cancel again
           trigger(NetMessage(self, server, Ready) -> net);
           state = Started;
         }

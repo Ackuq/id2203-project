@@ -45,15 +45,15 @@ import scala.collection.mutable
 class VSOverlayManager extends ComponentDefinition {
 
   //******* Ports ******
-  val route: NegativePort[Routing.type] = provides(Routing);
-  val boot: PositivePort[Bootstrapping.type]  = requires(Bootstrapping);
-  val net: PositivePort[Network]   = requires[Network];
-  val timer: PositivePort[Timer] = requires[Timer];
+  val route: NegativePort[Routing.type]      = provides(Routing);
+  val boot: PositivePort[Bootstrapping.type] = requires(Bootstrapping);
+  val net: PositivePort[Network]             = requires[Network];
+  val timer: PositivePort[Timer]             = requires[Timer];
   //******* Custom Ports ******
   val pLink: PositivePort[PerfectLinkPort] = requires[PerfectLinkPort];
 
   //******* Fields ******
-  val self: NetAddress                             = cfg.getValue[NetAddress]("id2203.project.address");
+  val self: NetAddress                 = cfg.getValue[NetAddress]("id2203.project.address");
   private var lut: Option[LookupTable] = None;
   private val leaders                  = mutable.Map.empty[Int, NetAddress];
   //******* Handlers ******

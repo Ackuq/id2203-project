@@ -17,11 +17,11 @@ import se.kth.id2203.networking.NetAddress
 import se.sics.kompics.Component
 
 class ReplicaWrapper extends ComponentDefinition {
-  val self: NetAddress  = cfg.getValue[NetAddress]("id2203.project.address");
-  val boot: PositivePort[Bootstrapping.type]  = requires(Bootstrapping);
-  val pLink: PositivePort[PerfectLinkPort] = requires[PerfectLinkPort];
-  val net: PositivePort[Network]   = requires[Network];
-  val timer: PositivePort[Timer] = requires[Timer];
+  val self: NetAddress                       = cfg.getValue[NetAddress]("id2203.project.address");
+  val boot: PositivePort[Bootstrapping.type] = requires(Bootstrapping);
+  val pLink: PositivePort[PerfectLinkPort]   = requires[PerfectLinkPort];
+  val net: PositivePort[Network]             = requires[Network];
+  val timer: PositivePort[Timer]             = requires[Timer];
 
   val kv: Component = create(classOf[KVService], Init.NONE);
 

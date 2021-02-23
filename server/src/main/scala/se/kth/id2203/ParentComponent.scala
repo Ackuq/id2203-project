@@ -38,7 +38,7 @@ import se.sics.kompics.Component;
 class ParentComponent extends ComponentDefinition {
 
   //******* Ports ******
-  val net: PositivePort[Network]   = requires[Network];
+  val net: PositivePort[Network] = requires[Network];
   val timer: PositivePort[Timer] = requires[Timer];
   //******* Custom components ******
   val pLink: Component = create(classOf[PerfectLink], Init.NONE);

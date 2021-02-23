@@ -11,9 +11,9 @@ import se.kth.id2203.networking.NetHeader
   * Don't know if this will be used, but good to have
   */
 class PerfectLink extends ComponentDefinition {
-  val self: NetAddress  = cfg.getValue[NetAddress]("id2203.project.address");
+  val self: NetAddress                     = cfg.getValue[NetAddress]("id2203.project.address");
   val pLink: NegativePort[PerfectLinkPort] = provides[PerfectLinkPort]
-  val net: PositivePort[Network]   = requires[Network]
+  val net: PositivePort[Network]           = requires[Network]
 
   pLink uponEvent {
     case PL_Send(dst: NetAddress, payload: KompicsEvent) => {
