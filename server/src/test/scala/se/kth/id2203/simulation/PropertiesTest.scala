@@ -28,6 +28,55 @@ class PropertiesTest extends AnyFlatSpec with Matchers with BeforeAndAfterAll {
     simpleBootScenario.simulate(classOf[LauncherComp]);
   }
 
+  /* Linearizability/Atomicity
+      - Only allow executions whose results appear as if there is a single system image and “global time” is obeyed
+   */
+  "Executions" should "be linearizabile" in {
+    // partition_index -> (address -> List<op>)
+    val decidedMap = mutable.Map.empty[Int, Map[String, List[String]]];
+    // partition_index -> List<op>
+    val proposedMap = mutable.Map.empty[Int, List[String]]
+
+    for (s <- 1 to nServers) {
+      val address     = SimpleConsensusScenario.serverBase + s;
+      val partition   = SimulationResult.get[Int](s"$address.partition").get;
+      val numProposed = SimulationResult.get[Int](s"$address.numProposed").getOrElse(0);
+      val numDecided  = SimulationResult.get[Int](s"$address.numDecided").getOrElse(0);
+      var decided     = List.empty[String];
+
+      if (!decidedMap.contains(partition)) {
+        decidedMap(partition) = Map.empty;
+      }
+
+      if (!proposedMap.contains(partition)) {
+        proposedMap(partition) = List.empty;
+      }
+
+      for (i <- 0 to numProposed - 1) {
+        val proposed = SimulationResult.get[String](s"$address.proposed.$i").get;
+        proposedMap(partition) = proposedMap(partition) :+ proposed;
+      }
+
+      for (i <- 0 to numDecided - 1) {
+        val decision = SimulationResult.get[String](s"$address.decided.$i").get;
+        decided = decided :+ decision;
+      }
+
+      decidedMap(partition) += (address -> decided)
+    }
+
+    for ((partition, proposed) <- proposedMap) {
+      for (decided <- decidedMap(partition).values) {
+        // We should not have decided unproposed values
+        decided.size <= proposed.size should be(true);
+        for (i <- 0 to decided.size - 1) {
+          // They should be decided in same order as proposed for all nodes in partition
+          decided(i) should be(proposed(i))
+        }
+      }
+    }
+  }
+
   /* Validity:
       - If process p decides v then v is a sequence of proposed commands (without duplicates)
    */
