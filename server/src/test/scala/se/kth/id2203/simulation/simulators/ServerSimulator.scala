@@ -31,12 +31,12 @@ import se.sics.kompics.Init;
 import se.sics.kompics.network.Network;
 import se.sics.kompics.timer.Timer;
 
-import se.kth.id2203.simulation.sequence_consensus.ReplicaWrapper;
+import se.kth.id2203.simulation.sequence_consensus.ConsensusWrapper;
 
 /** Custom Protocol */
 import se.kth.id2203.protocols.perfect_link.{PerfectLink, PerfectLinkPort};
 
-/** Copy of ParentComponent with bindings to custom ReplicaWrapper which sends information about Paxos messages
+/** Copy of ParentComponent with bindings to custom ConsensusWrapper which sends information about Paxos messages
   */
 class ServerSimulator extends ComponentDefinition {
 
@@ -52,7 +52,7 @@ class ServerSimulator extends ComponentDefinition {
     case None    => create(classOf[BootstrapServer], Init.NONE); // start in server mode
   }
 
-  val replicaWrapper = create(classOf[ReplicaWrapper], Init.NONE);
+  val consensusWrapper = create(classOf[ConsensusWrapper], Init.NONE);
 
   {
     // Perfect Link
@@ -65,9 +65,9 @@ class ServerSimulator extends ComponentDefinition {
     connect[Network](net           -> overlay);
     connect[PerfectLinkPort](pLink -> overlay);
     // Replica wrapper
-    connect[PerfectLinkPort](pLink -> replicaWrapper);
-    connect[Network](net           -> replicaWrapper);
-    connect(Bootstrapping)(boot    -> replicaWrapper);
-    connect[Timer](timer           -> replicaWrapper);
+    connect[PerfectLinkPort](pLink -> consensusWrapper);
+    connect[Network](net           -> consensusWrapper);
+    connect(Bootstrapping)(boot    -> consensusWrapper);
+    connect[Timer](timer           -> consensusWrapper);
   }
 }

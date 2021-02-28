@@ -49,7 +49,7 @@ class ParentComponent extends ComponentDefinition {
     case None    => create(classOf[BootstrapServer], Init.NONE); // start in server mode
   }
 
-  val replicaWrapper: Component = create(classOf[ReplicaWrapper], Init.NONE);
+  val consensusWrapper: Component = create(classOf[ConsensusWrapper], Init.NONE);
 
   {
     // Perfect Link
@@ -62,9 +62,9 @@ class ParentComponent extends ComponentDefinition {
     connect[Network](net           -> overlay);
     connect[PerfectLinkPort](pLink -> overlay);
     // Replica wrapper
-    connect[PerfectLinkPort](pLink -> replicaWrapper);
-    connect[Network](net           -> replicaWrapper);
-    connect(Bootstrapping)(boot    -> replicaWrapper);
-    connect[Timer](timer           -> replicaWrapper);
+    connect[PerfectLinkPort](pLink -> consensusWrapper);
+    connect[Network](net           -> consensusWrapper);
+    connect(Bootstrapping)(boot    -> consensusWrapper);
+    connect[Timer](timer           -> consensusWrapper);
   }
 }

@@ -7,7 +7,7 @@ import se.kth.id2203.networking.NetAddress;
 import se.kth.id2203.kvstore._;
 import se.kth.id2203.protocols.sequence_consencus.{SC_Decide, SC_Propose, SequenceConsensusPort};
 
-class SequentialConsensusMiddleware(init: Init[SequentialConsensusMiddleware]) extends ComponentDefinition {
+class ConsensusProxy(init: Init[ConsensusProxy]) extends ComponentDefinition {
   //******* Ports ******
   private val seqCons        = requires[SequenceConsensusPort]
   private val seqConsForward = provides[SequenceConsensusPort];

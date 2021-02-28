@@ -15,7 +15,7 @@ import se.kth.id2203.protocols.ble.BallotLeaderElectionPort
 import se.kth.id2203.protocols.sequence_consencus.SequenceConsensusPort
 import se.kth.id2203.networking.NetAddress
 
-class ReplicaWrapper extends ComponentDefinition {
+class ConsensusWrapper extends ComponentDefinition {
   val self  = cfg.getValue[NetAddress]("id2203.project.address");
   val boot  = requires(Bootstrapping);
   val pLink = requires[PerfectLinkPort];
@@ -31,12 +31,12 @@ class ReplicaWrapper extends ComponentDefinition {
 
         val ble     = create(classOf[GossipLeaderElection], Init[GossipLeaderElection](partition.toSet));
         val seqCons = create(classOf[SequencePaxos], Init[SequencePaxos](partition.toSet, key));
-        val seqConsMiddleware =
-          create(classOf[SequentialConsensusMiddleware], Init[SequentialConsensusMiddleware](key));
+        val seqConsProxy =
+          create(classOf[ConsensusProxy], Init[ConsensusProxy](key));
 
         trigger(new Start() -> ble.control());
         trigger(new Start() -> seqCons.control());
-        trigger(new Start() -> seqConsMiddleware.control());
+        trigger(new Start() -> seqConsProxy.control());
 
         // (Gossip) Ballot Leader Election
         connect[PerfectLinkPort](pLink -> ble);
@@ -47,12 +47,12 @@ class ReplicaWrapper extends ComponentDefinition {
         connect[BallotLeaderElectionPort](ble -> seqCons)
 
         // Scenario client
-        connect[SequenceConsensusPort](seqCons -> seqConsMiddleware);
+        connect[SequenceConsensusPort](seqCons -> seqConsProxy);
 
         // KV
-        connect[Network](net                             -> kv);
-        connect[PerfectLinkPort](pLink                   -> kv);
-        connect[SequenceConsensusPort](seqConsMiddleware -> kv);
+        connect[Network](net                        -> kv);
+        connect[PerfectLinkPort](pLink              -> kv);
+        connect[SequenceConsensusPort](seqConsProxy -> kv);
 
       } catch {
         case e: IllegalArgumentException => {

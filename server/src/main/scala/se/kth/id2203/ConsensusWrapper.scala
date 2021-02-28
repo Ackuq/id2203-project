@@ -16,7 +16,7 @@ import se.kth.id2203.protocols.sequence_consencus.SequenceConsensusPort
 import se.kth.id2203.networking.NetAddress
 import se.sics.kompics.Component
 
-class ReplicaWrapper extends ComponentDefinition {
+class ConsensusWrapper extends ComponentDefinition {
   val self: NetAddress                       = cfg.getValue[NetAddress]("id2203.project.address");
   val boot: PositivePort[Bootstrapping.type] = requires(Bootstrapping);
   val pLink: PositivePort[PerfectLinkPort]   = requires[PerfectLinkPort];
