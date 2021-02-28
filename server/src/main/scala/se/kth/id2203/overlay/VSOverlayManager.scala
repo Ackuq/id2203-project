@@ -34,12 +34,8 @@ import se.kth.id2203.protocols.perfect_link.{PL_Deliver, PL_Forward, PerfectLink
 import scala.collection.mutable
 
 /** The V(ery)S(imple)OverlayManager.
-  * <p>
-  * Keeps all nodes in a single partition in one replication group.
-  * <p>
-  * Note: This implementation does not fulfill the project task. You have to
-  * support multiple partitions!
-  * <p>
+  * Divides the nodes into partition and handle routing of messages
+  *
   * @author Lars Kroll <lkroll@kth.se>
   */
 class VSOverlayManager extends ComponentDefinition {
