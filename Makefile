@@ -48,3 +48,8 @@ compile-server:
 
 compile-common:
 	sbt common/compile
+
+### Zip ###
+
+zip:
+	git archive -o id2203-project.zip HEAD
